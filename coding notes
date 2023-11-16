@@ -116,14 +116,21 @@ for sample in "${alph1[@]}";
 do spades.py --rnaviral --pe1-1 final_trimmed_fastqs/${sample}_SXX_L001_001.R1.qhtrim.unmapped.sorted2.fastq --pe1-2 final_trimmed_fastqs/${sample}_SXX_L001_001.R2.qhtrim.unmapped.sorted2.fastq -o spades/rnaviral/${sample}_metaviral_spades_output;
 done
 
-
-samtools view -b -f 12 -F 256 SAMPLE_mapped_and_unmapped.bam > SAMPLE_bothReadsUnmapped.bam
-
-
+#rename the assembly files
+for dir in *_rnaviral_spades_output;  do sample="${dir:0:1}";  mv ${dir}/scaffolds.fasta ${dir}/${sample}_scaffolds.fasta;  done
 
 
+#used minimap to align the assemblies to the phi6 reference segments but honestly thhe alignments dont look great:
+minimap2 -ax asm5 ref.fa asm.fa > aln.sam
 
+#make giant file of all assemblies with phi6 S M and L at top
+cat phi6_L.fasta *_rnaviral_spades_output/*_scaffolds.fasta >> L_all_whole_scaffolds.fasta
+cat phi6_M.fasta *_rnaviral_spades_output/*_scaffolds.fasta >> M_all_whole_scaffolds.fasta
+cat phi6_S.fasta *_rnaviral_spades_output/*_scaffolds.fasta >> S_all_whole_scaffolds.fasta
 
+for dir in *_rnaviral_spades_output;
+do sample="${dir:0:1}"; 
+mafft-einsi --genafpair --adjustdirectionaccurately --maxiterate 1000 L_all_whole_scaffolds.fasta > L_all_whole_scaffolds.mafft.fasta
 
 
 
