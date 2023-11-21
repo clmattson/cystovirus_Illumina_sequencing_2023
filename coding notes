@@ -138,6 +138,101 @@ mafft-einsi --genafpair --adjustdirectionaccurately --maxiterate 1000 L_all_whol
 
 
 
+OK maybe spades --rnaviral assumes something untrue about recombination or something. Idk, lets try a diff setting for assembly
+#maybe isolate spades?
+
+
+#first lets align reads to phi6 genome to estimate coverage
+
+
+#build phi6 db
+
+bowtie2-build phi6_ref.fasta phi6DB
+
+#align each set of reads to the phi6 genome
+for pair in ./fastqs/*_*R1*.fastq; 
+#get leading sample name letter only
+do sample_temp=${pair%%_*};
+sample=$(basename $sample_temp);
+bowtie2 -p 8 -x phi6DB -1 ./trimmed_fastqs/${sample}_SXX_L001_R1_001.qtrim.fastq  -2 ./trimmed_fastqs/${sample}_SXX_L001_R2_001.qtrim.fastq  -S ./reads_to_phi6_ref/${sample}_SXX_L001_001.qtrim.p6aln.sam;
+done
+
+#sam to bam
+
+for pair in *_SXX_L001_001.qtrim.p6aln.sam; 
+#get leading sample name letter only
+do sample_temp=${pair%%_*};
+sample=$(basename $sample_temp);
+samtools view -bS ${pair} > ${sample}_SXX_L001_001.qtrim.p6aln.bam;
+done
+
+
+
+
+#sort bam
+for pair in *_SXX_L001_001.qtrim.p6aln.bam; 
+#get leading sample name letter only
+do sample_temp=${pair%%_*};
+sample=$(basename $sample_temp);
+samtools sort -o ${sample}_SXX_L001_001.qtrim.p6aln.sorted.bam -T ./samtools_temp_dir3 --threads 24 ${pair};
+done
+
+for pair in *_SXX_L001_001.qtrim.p6aln.sorted.bam; 
+#get leading sample name letter only
+do sample_temp=${pair%%_*};
+sample=$(basename $sample_temp);
+samtools view -b -F 4 -f 8 ${pair} > ${sample}_SXX_L001_001.qhtrim.sorted.mapped1.bam
+samtools view -b -F 8 -f 4 ${pair} > ${sample}_SXX_L001_001.qhtrim.sorted.mapped2.bam
+samtools view -b -F 12 ${pair} > ${sample}_SXX_L001_001.qhtrim.sorted.mapped_both.bam
+done
+
+
+for pair in *_SXX_L001_001.qtrim.p6aln.sorted.bam; 
+#get leading sample name letter only
+do sample_temp=${pair%%_*};
+sample=$(basename $sample_temp);
+samtools merge ${sample}_merged.bam ${sample}_SXX_L001_001.qhtrim.sorted.mapped1.bam ${sample}_SXX_L001_001.qhtrim.sorted.mapped2.bam ${sample}_SXX_L001_001.qhtrim.sorted.mapped_both.bam;
+done
+
+#sort again
+for pair in *_merged.bam; 
+#get leading sample name letter only
+do sample_temp=${pair%%_*};
+sample=$(basename $sample_temp);
+samtools sort -o ${sample}_merged.sorted.bam -T ./samtools_temp_dir2 --threads 24 ${pair};
+done
+
+
+samtools view -F 4 -f 8 input.bam > only_this_end_mapped.sam
+samtools view -F 8 -f 4 input.bam > only_that_end_mapped.sam
+samtools view -F 12 input.bam > both_ends_mapped.sam
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+#--isolate
+for pair in final_trimmed_fastqs/*_SXX_L001_001.R1.qhtrim.unmapped.sorted2.fastq; 
+do file=$(basename $pair); 
+sample_temp=${file%%_*}; 
+sample=$(basename $sample_temp); 
+spades.py --rnaviral --pe1-1 final_trimmed_fastqs/${sample}_SXX_L001_001.R1.qhtrim.unmapped.sorted2.fastq --pe1-2 final_trimmed_fastqs/${sample}_SXX_L001_001.R2.qhtrim.unmapped.sorted2.fastq -o spades/rnaviral/${sample}_metaviral_spades_output;
+done
+
+
+
 
 
 
