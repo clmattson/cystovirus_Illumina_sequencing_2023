@@ -147,93 +147,91 @@ OK maybe spades --rnaviral assumes something untrue about recombination or somet
 
 #build phi6 db
 
-bowtie2-build phi6_ref.fasta phi6DB
+bowtie2-build phi6_ref_cat.fasta phi6catDB
 
 #align each set of reads to the phi6 genome
 for pair in ./fastqs/*_*R1*.fastq; 
 #get leading sample name letter only
 do sample_temp=${pair%%_*};
 sample=$(basename $sample_temp);
-bowtie2 -p 8 -x phi6DB -1 ./trimmed_fastqs/${sample}_SXX_L001_R1_001.qtrim.fastq  -2 ./trimmed_fastqs/${sample}_SXX_L001_R2_001.qtrim.fastq  -S ./reads_to_phi6_ref/${sample}_SXX_L001_001.qtrim.p6aln.sam;
+bowtie2 -p 8 -x phi6catDB -1 ./trimmed_fastqs/${sample}_SXX_L001_R1_001.qtrim.fastq  -2 ./trimmed_fastqs/${sample}_SXX_L001_R2_001.qtrim.fastq  -S ./reads_to_phi6_ref/${sample}_SXX_L001_001.qtrim.p6cataln.sam;
 done
 
 #sam to bam
 
-for pair in *_SXX_L001_001.qtrim.p6aln.sam; 
+for pair in *_SXX_L001_001.qtrim.p6cataln.sam; 
 #get leading sample name letter only
 do sample_temp=${pair%%_*};
 sample=$(basename $sample_temp);
-samtools view -bS ${pair} > ${sample}_SXX_L001_001.qtrim.p6aln.bam;
+samtools view -bS ${pair} > ${sample}_SXX_L001_001.qtrim.p6cataln.bam;
 done
-
-
-
 
 #sort bam
-for pair in *_SXX_L001_001.qtrim.p6aln.bam; 
+for pair in *_SXX_L001_001.qtrim.p6cataln.bam; 
 #get leading sample name letter only
 do sample_temp=${pair%%_*};
 sample=$(basename $sample_temp);
-samtools sort -o ${sample}_SXX_L001_001.qtrim.p6aln.sorted.bam -T ./samtools_temp_dir3 --threads 24 ${pair};
+samtools sort -o ${sample}_SXX_L001_001.qtrim.p6cataln.sorted.bam -T ./samtools_temp_dir3 --threads 24 ${pair};
 done
 
-for pair in *_SXX_L001_001.qtrim.p6aln.sorted.bam; 
+for pair in *_SXX_L001_001.qtrim.p6cataln.sorted.bam; 
 #get leading sample name letter only
 do sample_temp=${pair%%_*};
 sample=$(basename $sample_temp);
-samtools view -b -F 4 -f 8 ${pair} > ${sample}_SXX_L001_001.qhtrim.sorted.mapped1.bam
-samtools view -b -F 8 -f 4 ${pair} > ${sample}_SXX_L001_001.qhtrim.sorted.mapped2.bam
-samtools view -b -F 12 ${pair} > ${sample}_SXX_L001_001.qhtrim.sorted.mapped_both.bam
+samtools view -b -F 4 -f 8 ${pair} > ${sample}_SXX_L001_001.qhtrim.p6cataln.sorted.mapped1.bam
+samtools view -b -F 8 -f 4 ${pair} > ${sample}_SXX_L001_001.qhtrim.p6cataln.sorted.mapped2.bam
+samtools view -b -F 12 ${pair} > ${sample}_SXX_L001_001.qhtrim.p6cataln.sorted.mapped_both.bam
 done
 
 
-for pair in *_SXX_L001_001.qtrim.p6aln.sorted.bam; 
+for pair in *_SXX_L001_001.qtrim.p6cataln.sorted.bam; 
 #get leading sample name letter only
 do sample_temp=${pair%%_*};
 sample=$(basename $sample_temp);
-samtools merge ${sample}_merged.bam ${sample}_SXX_L001_001.qhtrim.sorted.mapped1.bam ${sample}_SXX_L001_001.qhtrim.sorted.mapped2.bam ${sample}_SXX_L001_001.qhtrim.sorted.mapped_both.bam;
+samtools merge ${sample}_p6cataln.merged.bam ${sample}_SXX_L001_001.qhtrim.p6cataln.sorted.mapped1.bam ${sample}_SXX_L001_001.qhtrim.p6cataln.sorted.mapped2.bam ${sample}_SXX_L001_001.qhtrim.p6cataln.sorted.mapped_both.bam;
 done
 
 #sort again
-for pair in *_merged.bam; 
+for pair in *_p6cataln.merged.bam; 
 #get leading sample name letter only
 do sample_temp=${pair%%_*};
 sample=$(basename $sample_temp);
-samtools sort -o ${sample}_merged.sorted.bam -T ./samtools_temp_dir2 --threads 24 ${pair};
+samtools sort -o ${sample}_p6cataln_merged.sorted.bam -T ./samtools_temp_dir2 --threads 24 ${pair};
+done
+
+for pair in *_p6cataln_merged.sorted.bam; 
+#get leading sample name letter only
+do sample_temp=${pair%%_*};
+sample=$(basename $sample_temp);
+samtools fastq -@ 8 ${sample}_p6cataln_merged.sorted.bam -1 ${sample}_p6cataln_merged_sorted_1.fastq -2 ${sample}_p6cataln_merged_sorted_2.fastq;
 done
 
 
-samtools view -F 4 -f 8 input.bam > only_this_end_mapped.sam
-samtools view -F 8 -f 4 input.bam > only_that_end_mapped.sam
-samtools view -F 12 input.bam > both_ends_mapped.sam
-
-
-
-
-
-
-
-
-
-
-
-
+#to view read to ref alignments in tablet need to convert final bam to sam
+for pair in *_p6cataln_merged.sorted.bam; 
+#get leading sample name letter only
+do sample_temp=${pair%%_*};
+sample=$(basename $sample_temp);
+samtools view -h -o ${sample}_p6cataln_merged.sorted.sam ${sample}_p6cataln_merged.sorted.bam;
+done
 
 
 
 
 
 #--isolate
-for pair in final_trimmed_fastqs/*_SXX_L001_001.R1.qhtrim.unmapped.sorted2.fastq; 
+for pair in reads_to_phi6_ref/*_merged_sorted_1.fastq; 
 do file=$(basename $pair); 
 sample_temp=${file%%_*}; 
 sample=$(basename $sample_temp); 
-spades.py --rnaviral --pe1-1 final_trimmed_fastqs/${sample}_SXX_L001_001.R1.qhtrim.unmapped.sorted2.fastq --pe1-2 final_trimmed_fastqs/${sample}_SXX_L001_001.R2.qhtrim.unmapped.sorted2.fastq -o spades/rnaviral/${sample}_metaviral_spades_output;
+spades.py --rnaviral --pe1-1 reads_to_phi6_ref/${sample}_merged_sorted_1.fastq --pe1-2 reads_to_phi6_ref/${sample}_merged_sorted_2.fastq -o spades/isolate/${sample}_isolate_spades_output;
 done
 
 
 
 
+
+#to view
 
 
 
