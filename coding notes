@@ -252,53 +252,69 @@ samtools view -bS ${pair} > ${sample}_SXX_L001_001.qtrim.RNAv.bam;
 done
 
 #sort bam
-for pair in *_SXX_L001_001.qtrim.p6cataln.bam; 
+for pair in *_SXX_L001_001.qtrim.RNAv.bam; 
 #get leading sample name letter only
 do sample_temp=${pair%%_*};
 sample=$(basename $sample_temp);
-samtools sort -o ${sample}_SXX_L001_001.qtrim.p6cataln.sorted.bam -T ./samtools_temp_dir3 --threads 24 ${pair};
+samtools sort -o ${sample}_SXX_L001_001.qtrim.RNAv.sorted.bam -T ./samtools_temp_dir4 --threads 24 ${pair};
 done
 
-for pair in *_SXX_L001_001.qtrim.p6cataln.sorted.bam; 
+for pair in *_SXX_L001_001.qtrim.RNAv.sorted.bam; 
 #get leading sample name letter only
 do sample_temp=${pair%%_*};
 sample=$(basename $sample_temp);
-samtools view -b -F 4 -f 8 ${pair} > ${sample}_SXX_L001_001.qhtrim.p6cataln.sorted.mapped1.bam
-samtools view -b -F 8 -f 4 ${pair} > ${sample}_SXX_L001_001.qhtrim.p6cataln.sorted.mapped2.bam
-samtools view -b -F 12 ${pair} > ${sample}_SXX_L001_001.qhtrim.p6cataln.sorted.mapped_both.bam
+samtools view -b -F 4 -f 8 ${pair} > ${sample}_SXX_L001_001.qhtrim.RNAv.sorted.mapped1.bam
+samtools view -b -F 8 -f 4 ${pair} > ${sample}_SXX_L001_001.qhtrim.RNAv.sorted.mapped2.bam
+samtools view -b -F 12 ${pair} > ${sample}_SXX_L001_001.qhtrim.RNAv.sorted.mapped_both.bam
 done
 
 
-for pair in *_SXX_L001_001.qtrim.p6cataln.sorted.bam; 
+for pair in *_SXX_L001_001.qtrim.RNAv.sorted.bam; 
 #get leading sample name letter only
 do sample_temp=${pair%%_*};
 sample=$(basename $sample_temp);
-samtools merge ${sample}_p6cataln.merged.bam ${sample}_SXX_L001_001.qhtrim.p6cataln.sorted.mapped1.bam ${sample}_SXX_L001_001.qhtrim.p6cataln.sorted.mapped2.bam ${sample}_SXX_L001_001.qhtrim.p6cataln.sorted.mapped_both.bam;
+samtools merge ${sample}_RNAv.merged.bam ${sample}_SXX_L001_001.qhtrim.RNAv.sorted.mapped1.bam ${sample}_SXX_L001_001.qhtrim.RNAv.sorted.mapped2.bam ${sample}_SXX_L001_001.qhtrim.RNAv.sorted.mapped_both.bam;
 done
 
 #sort again
-for pair in *_p6cataln.merged.bam; 
+for pair in *_RNAv.merged.bam; 
 #get leading sample name letter only
 do sample_temp=${pair%%_*};
 sample=$(basename $sample_temp);
-samtools sort -o ${sample}_p6cataln_merged.sorted.bam -T ./samtools_temp_dir2 --threads 24 ${pair};
+samtools sort -o ${sample}_RNAv_merged.sorted.bam -T ./samtools_temp_dir5 --threads 24 ${pair};
 done
 
-for pair in *_p6cataln_merged.sorted.bam; 
+for pair in *_RNAv_merged.sorted.bam; 
 #get leading sample name letter only
 do sample_temp=${pair%%_*};
 sample=$(basename $sample_temp);
-samtools fastq -@ 8 ${sample}_p6cataln_merged.sorted.bam -1 ${sample}_p6cataln_merged_sorted_1.fastq -2 ${sample}_p6cataln_merged_sorted_2.fastq;
+samtools fastq -@ 8 ${sample}_RNAv_merged.sorted.bam -1 ${sample}_RNAv_merged_sorted_1.fastq -2 ${sample}_RNAv_merged_sorted_2.fastq;
 done
 
 
 #to view read to ref alignments in tablet need to convert final bam to sam
-for pair in *_p6cataln_merged.sorted.bam; 
+for pair in *_RNAv_merged.sorted.bam; 
 #get leading sample name letter only
 do sample_temp=${pair%%_*};
 sample=$(basename $sample_temp);
-samtools view -h -o ${sample}_p6cataln_merged.sorted.sam ${sample}_p6cataln_merged.sorted.bam;
+samtools view -h -o ${sample}_RNAv_merged.sorted.sam ${sample}_RNAv_merged.sorted.bam;
 done
+
+
+
+
+
+
+#filter scaffolds by spades k-mer coverage, "cov" in fasta header
+
+for dir in *_rnaviral_spades_output;  
+do sample="${dir:0:1}";
+readarray ${sample}_covs_array < <(grep -oP '(?<=cov_)[0-9, .]+' ${dir}/${sample}_scaffolds.fasta);
+filter this array to get values greater than X,
+Add reads with vvalues in the gt array to new fasta
+done
+
+
 
 
 
