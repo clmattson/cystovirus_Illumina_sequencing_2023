@@ -310,7 +310,11 @@ done
 for dir in *_rnaviral_spades_output;  
 do sample="${dir:0:1}";
 readarray ${sample}_covs_array < <(grep -oP '(?<=cov_)[0-9, .]+' ${dir}/${sample}_scaffolds.fasta);
-filter this array to get values greater than X,
+#filter this array to get values greater than X,
+declare min=1000.0
+for value in "$${sample}_covs_array[@]}"; do
+  ((value > max)) && gt_values+=("$value") || le_values+=("$value")
+done
 Add reads with vvalues in the gt array to new fasta
 done
 
