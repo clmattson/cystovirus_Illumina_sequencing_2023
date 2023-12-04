@@ -338,9 +338,9 @@ done
 done
 
 
+#ok lets align assemblies by segment
 
-
-
+mafft-einsi --genafpair --adjustdirectionaccurately --maxiterate 1000 L_assemblies.fasta > L_assemblies_mafft.fasta
 
 
 
