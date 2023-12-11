@@ -305,6 +305,67 @@ done
 
 
 
+
+
+
+
+#align to phi6 ref with looser requirements for bowtie
+
+
+#align each set of reads to spades rna viral spades assembly
+for pair in ./fastqs/*_*R1*.fastq; 
+#get leading sample name letter only
+do sample_temp=${pair%%_*};
+sample=$(basename $sample_temp);
+bowtie2 -p 8 -x ${sample}_rnaviral_spades_assembly_DB -1 ./trimmed_fastqs/${sample}_SXX_L001_R1_001.qtrim.fastq  -2 ./trimmed_fastqs/${sample}_SXX_L001_R2_001.qtrim.fastq  -S ./reads_to_spadesRNAV_assemblies/${sample}_SXX_L001_001.qtrim.RNAv.sam;
+done
+
+#sam to bam
+
+for pair in *_SXX_L001_001.qtrim.p6aln.bam; 
+#get leading sample name letter only
+do sample_temp=${pair%%_*};
+sample=$(basename $sample_temp);
+#sam to bam
+#samtools view -bS ${pair} > ${sample}_SXX_L001_001.qtrim.p6aln.bam;
+#sort bam
+samtools sort -o ${sample}_SXX_L001_001.qtrim.p6aln.sorted.bam -T ./samtools_temp_dir5 --threads 24 ${sample}_SXX_L001_001.qtrim.p6aln.bam;
+#get mapped reads
+samtools view -b -F 4 -f 8 ${sample}_SXX_L001_001.qtrim.p6aln.sorted.bam > ${sample}_SXX_L001_001.qhtrim.p6aln.sorted.mapped1.bam;
+#samtools view -b -F 8 -f 4 ${sample}_SXX_L001_001.qtrim.p6aln.sorted.bam > ${sample}_SXX_L001_001.qhtrim.p6aln.sorted.mapped2.bam;
+samtools view -b -F 12 -f 2 ${sample}_SXX_L001_001.qtrim.p6aln.sorted.bam > ${sample}_SXX_L001_001.qhtrim.p6aln.sorted.mapped_both.bam;
+samtools merge ${sample}_p6aln.merged.bam ${sample}_SXX_L001_001.qhtrim.p6aln.sorted.mapped1.bam ${sample}_SXX_L001_001.qhtrim.RNAv.sorted.mapped_both.bam;
+samtools sort -o ${sample}_p6aln_merged.sorted.bam -T ./samtools_temp_dir5 --threads 24 ${sample}_p6aln.merged.bam;
+samtools fastq -@ 8 ${sample}_p6aln_merged.sorted.bam -1 ${sample}_p6aln_merged_sorted_1.fastq -2 ${sample}_p6aln_merged_sorted_2.fastq;
+samtools view -h -o ${sample}_p6aln_merged.sorted.sam ${sample}_p6aln_merged.sorted.bam;
+echo -e "contig\tposition\tdepth" > ${sample}_p6aln.coverage;
+samtools depth ${sample}_p6aln_merged.sorted.bam >> ${sample}_p6aln.coverage;
+done
+
+for pair in *_SXX_L001_001.qtrim.p6aln.bam; 
+#get leading sample name letter only
+do sample_temp=${pair%%_*};
+sample=$(basename $sample_temp);
+echo -e "contig\tposition\tdepth" > ${sample}_p6aln.coverage;
+samtools depth ${sample}_p6aln_merged.sorted.bam >> ${sample}_p6aln.coverage;
+done
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 #filter scaffolds by spades k-mer coverage, "cov" in fasta header
 
 #remove line breaks from scaffold files
