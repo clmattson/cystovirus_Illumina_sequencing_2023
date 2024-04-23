@@ -10,6 +10,15 @@ fastqc fastqs/*.fastq --outdir fastqc-out/
 
 
 #quality trim
+
+#below code wont work for new files
+for pair in ./fastqs/*_*R1*.fastq; 
+#get leading sample name letter only
+do sample_temp=${pair%%%%_*};
+sample=$(basename $sample_temp);
+echo $sample_temp ;
+echo $sample;
+done
   
 for pair in ./fastqs/*_*R1*.fastq; 
 #get leading sample name letter only
