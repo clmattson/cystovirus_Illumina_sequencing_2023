@@ -12,9 +12,10 @@ fastqc fastqs/*.fastq --outdir fastqc-out/
 #quality trim
 
 #below code wont work for new files
+#test:
 for pair in ./fastqs/*_*R1*.fastq; 
 #get leading sample name letter only
-do sample_temp=${pair%%%%_*};
+do sample_temp=${pair%%_L*};
 sample=$(basename $sample_temp);
 echo $sample_temp ;
 echo $sample;
@@ -22,12 +23,12 @@ done
   
 for pair in ./fastqs/*_*R1*.fastq; 
 #get leading sample name letter only
-do sample_temp=${pair%%_*};
+do sample_temp=${pair%%_L0*};
 sample=$(basename $sample_temp)
 fastp --in1 ./fastqs/${sample}*R1*.fastq \
   --in2 ./fastqs/${sample}*R2*.fastq \
-  --out1 ./trimmed_fastqs/${sample}_SXX_L001_R1_001.qtrim.fastq \
-  --out2 ./trimmed_fastqs/${sample}_SXX_L001_R2_001.qtrim.fastq \
+  --out1 ./trimmed_fastqs/${sample}_L001_R1_001.qtrim.fastq \
+  --out2 ./trimmed_fastqs/${sample}_L001_R2_001.qtrim.fastq \
   --detect_adapter_for_pe \
   --length_required 31 --correction;
 done
@@ -41,59 +42,59 @@ bowtie2-build P_savastanoi_ref.fasta Ps_db
 #align each set of reads to the host genome
 for pair in ./fastqs/*_*R1*.fastq; 
 #get leading sample name letter only
-do sample_temp=${pair%%_*};
+do sample_temp=${pair%%_L0*};
 sample=$(basename $sample_temp);
-bowtie2 -p 8 -x Ps_db -1 ./trimmed_fastqs/${sample}_SXX_L001_R1_001.qtrim.fastq  -2 ./trimmed_fastqs/${sample}_SXX_L001_R2_001.qtrim.fastq  -S ./trimmed_host/${sample}_SXX_L001_001.qtrim.htrim.sam;
+bowtie2 -p 8 -x Ps_db -1 ./trimmed_fastqs/${sample}_L001_R1_001.qtrim.fastq  -2 ./trimmed_fastqs/${sample}_L001_R2_001.qtrim.fastq  -S ./trimmed_host/${sample}_L001_001.qtrim.htrim.sam;
 done
 
 #sam to bam
 
-for pair in *_SXX_L001_001.qtrim.htrim.sam; 
+for pair in *_L001_001.qtrim.htrim.sam; 
 #get leading sample name letter only
-do sample_temp=${pair%%_*};
+do sample_temp=${pair%%_L0*};
 sample=$(basename $sample_temp);
-samtools view -bS ${pair} > ${sample}_SXX_L001_001.qtrim.htrim.bam;
+samtools view -bS ${pair} > ${sample}_L001_001.qtrim.htrim.bam;
 done
 
 #sort bam
-for pair in *_SXX_L001_001.qtrim.htrim.bam; 
+for pair in *_L001_001.qtrim.htrim.bam; 
 #get leading sample name letter only
-do sample_temp=${pair%%_*};
+do sample_temp=${pair%%_L0*};
 sample=$(basename $sample_temp);
-samtools sort -o ${sample}_SXX_L001_001.qtrim.htrim.sorted.bam -T ./samtools_temp_dir --threads 24 ${pair};
+samtools sort -o ${sample}_L001_001.qtrim.htrim.sorted.bam -T ./samtools_temp_dir --threads 24 ${pair};
 done
 
 #remove mapped reads
 #actually I think this isnt quite right, see below
 for pair in *_SXX_L001_001.qtrim.htrim.sorted.bam; 
 #get leading sample name letter only
-do sample_temp=${pair%%_*};
+do sample_temp=${pair%%_L0*};
 sample=$(basename $sample_temp);
-samtools view -b -f 4 ${pair} > ${sample}_SXX_L001_001.qhtrim.sorted.unmapped.bam
+samtools view -b -f 4 ${pair} > ${sample}_L001_001.qhtrim.sorted.unmapped.bam
 done
 
 #so the '-f 12' flag means to keep only reads where both mates in the pair are unmapped, which is more thorough since pe reads come from 1 piece of dna
-for pair in *_SXX_L001_001.qtrim.htrim.sorted.bam; 
+for pair in *_L001_001.qtrim.htrim.sorted.bam; 
 #get leading sample name letter only
-do sample_temp=${pair%%_*};
+do sample_temp=${pair%%_L0*};
 sample=$(basename $sample_temp);
-samtools view -b -f 12 ${pair} > ${sample}_SXX_L001_001.qhtrim.sorted.unmapped.bam
+samtools view -b -f 12 ${pair} > ${sample}_L001_001.qhtrim.sorted.unmapped.bam
 done
 
 #need to get filtered bam back to fastq's. sort again?
 #sort bam
-for pair in *_SXX_L001_001.qhtrim.sorted.unmapped.bam; 
+for pair in *_L001_001.qhtrim.sorted.unmapped.bam; 
 #get leading sample name letter only
-do sample_temp=${pair%%_*};
+do sample_temp=${pair%%_L0*};
 sample=$(basename $sample_temp);
-samtools sort -o ${sample}_SXX_L001_001.qhtrim.unmapped.sorted2.bam -T ./samtools_temp_dir2 --threads 24 ${pair};
+samtools sort -o ${sample}_L001_001.qhtrim.unmapped.sorted2.bam -T ./samtools_temp_dir2 --threads 24 ${pair};
 done
 
-for pair in *_SXX_L001_001.qhtrim.unmapped.sorted2.bam; 
+for pair in *_L001_001.qhtrim.unmapped.sorted2.bam; 
 #get leading sample name letter only
-do sample_temp=${pair%%_*};
+do sample_temp=${pair%%_L0*};
 sample=$(basename $sample_temp);
-samtools fastq -@ 8 ${sample}_SXX_L001_001.qhtrim.unmapped.sorted2.bam -1 ${sample}_SXX_L001_001.R1.qhtrim.unmapped.sorted2.fastq -2 ${sample}_SXX_L001_001.R2.qhtrim.unmapped.sorted2.fastq;
+samtools fastq -@ 8 ${sample}_L001_001.qhtrim.unmapped.sorted2.bam -1 ${sample}_L001_001.R1.qhtrim.unmapped.sorted2.fastq -2 ${sample}_L001_001.R2.qhtrim.unmapped.sorted2.fastq;
 done
 
 
@@ -109,11 +110,11 @@ done
 
 
 #--rnaviral ***** worked?
-for pair in final_trimmed_fastqs/*_SXX_L001_001.R1.qhtrim.unmapped.sorted2.fastq; 
+for pair in final_trimmed_fastqs/*_L001_001.R1.qhtrim.unmapped.sorted2.fastq; 
 do file=$(basename $pair); 
-sample_temp=${file%%_*}; 
+sample_temp=${file%%_L0*}; 
 sample=$(basename $sample_temp); 
-spades.py --rnaviral --pe1-1 final_trimmed_fastqs/${sample}_SXX_L001_001.R1.qhtrim.unmapped.sorted2.fastq --pe1-2 final_trimmed_fastqs/${sample}_SXX_L001_001.R2.qhtrim.unmapped.sorted2.fastq -o spades/rnaviral/${sample}_metaviral_spades_output;
+spades.py --rnaviral --pe1-1 final_trimmed_fastqs/${sample}_L001_001.R1.qhtrim.unmapped.sorted2.fastq --pe1-2 final_trimmed_fastqs/${sample}_L001_001.R2.qhtrim.unmapped.sorted2.fastq -o spades/rnaviral/${sample}_metaviral_spades_output;
 done
 
 #do the rest after command died:
