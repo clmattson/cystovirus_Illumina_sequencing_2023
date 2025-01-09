@@ -338,6 +338,12 @@ sample=$(basename $sample_temp);
 samtools consensus -o ${sample}_consensus.fasta --min-depth 60 ${sample}_p6Saln.merged.sorted.bam;
 done
 
+
+
+
+
+#try regular spades and --meta spades
+
 -- 01/08/2025
 
 module load conda/base
