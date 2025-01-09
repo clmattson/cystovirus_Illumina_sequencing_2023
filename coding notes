@@ -394,6 +394,19 @@ X low overall reads <1000
 
 M looks great - even, deep
 
+for pair in *_SXX_L001_001.qtrim.p6Saln.sam; 
+#get leading sample name letter only
+do sample_temp=${pair%%_*};
+sample=$(basename $sample_temp);
+samtools consensus -o ${sample}_consensus.fasta --min-depth 60 ${sample}_p6Saln.merged.sorted.bam;
+done
+
+
+#ok now lets try to get consensus files from sams. not sure if some ahve poor coverage bc phi6 isnt a close ref for them or if bc sequence data is bad
+
+
+
+
 -- end Jan 2025 edits
 
 
