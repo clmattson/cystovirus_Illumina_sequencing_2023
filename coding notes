@@ -331,6 +331,12 @@ done
 
 #they seem to look the same in Tablet???
 
+for pair in *_SXX_L001_001.qtrim.p6Saln.sam;
+#get leading sample name letter only
+do sample_temp=${pair%%_*};
+sample=$(basename $sample_temp);
+samtools consensus -o ${sample}_consensus.fasta --min-depth 60 ${sample}_p6Saln.merged.sorted.bam;
+done
 
 -- 01/08/2025
 
