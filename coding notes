@@ -321,7 +321,7 @@ samtools sort -o ${sample}_SXX_L001_001.qtrim.p6aln.sorted.bam -T ./samtools_tem
 samtools view -b -F 4 -f 8 ${sample}_SXX_L001_001.qtrim.p6aln.sorted.bam > ${sample}_SXX_L001_001.qhtrim.p6aln.sorted.mapped1.bam;
 #samtools view -b -F 8 -f 4 ${sample}_SXX_L001_001.qtrim.p6aln.sorted.bam > ${sample}_SXX_L001_001.qhtrim.p6aln.sorted.mapped2.bam;
 samtools view -b -F 12 -f 2 ${sample}_SXX_L001_001.qtrim.p6aln.sorted.bam > ${sample}_SXX_L001_001.qhtrim.p6aln.sorted.mapped_both.bam;
-samtools merge ${sample}_p6aln.merged.bam ${sample}_SXX_L001_001.qhtrim.p6aln.sorted.mapped1.bam ${sample}_SXX_L001_001.qhtrim.RNAv.sorted.mapped_both.bam;
+samtools merge -o ${sample}_p6aln.merged.bam ${sample}_SXX_L001_001.qhtrim.p6aln.sorted.mapped1.bam ${sample}_SXX_L001_001.qhtrim.RNAv.sorted.mapped_both.bam;
 samtools sort -o ${sample}_p6aln_merged.sorted.bam -T ./samtools_temp_dir5 --threads 24 ${sample}_p6aln.merged.bam;
 samtools fastq -@ 8 ${sample}_p6aln_merged.sorted.bam -1 ${sample}_p6aln_merged_sorted_1.fastq -2 ${sample}_p6aln_merged_sorted_2.fastq;
 samtools view -h -o ${sample}_p6aln_merged.sorted.sam ${sample}_p6aln_merged.sorted.bam;
@@ -332,7 +332,69 @@ done
 #they seem to look the same in Tablet???
 
 
+-- 01/08/2025
 
+module load conda/base
+conda activate cysto_illumina
+
+#hmm, maybe i shouldnt have been trying to use a concatenated reference for ref-based assembly. lets try separate segment assembly?
+
+#build phi6 S db
+bowtie2-build phi6_S.fasta phi6_S_DB
+
+#align each set of reads to the phi6 S seg ref
+for pair in ./fastqs/*_*R1*.fastq; 
+#get leading sample name letter only
+do sample_temp=${pair%%_*};
+sample=$(basename $sample_temp);
+bowtie2 -p 8 -x phi6_S_DB -1 ./trimmed_fastqs/${sample}_SXX_L001_R1_001.qtrim.fastq  -2 ./trimmed_fastqs/${sample}_SXX_L001_R2_001.qtrim.fastq  -S ./reads_to_phi6_S/${sample}_SXX_L001_001.qtrim.p6Saln.sam;
+done
+
+#go to new sams: 
+cd reads_to_phi6_S
+
+#follow up actions:
+for pair in *_SXX_L001_001.qtrim.p6Saln.sam; 
+#get leading sample name letter only
+do sample_temp=${pair%%_*};
+sample=$(basename $sample_temp);
+#sam to bam
+samtools view -bS ${pair} > ${sample}_SXX_L001_001.qtrim.p6Saln.bam;
+#sort bam
+samtools sort -o ${sample}_SXX_L001_001.qtrim.p6Saln.sorted.bam -T ./samtools_temp_dir5 --threads 24 ${sample}_SXX_L001_001.qtrim.p6Saln.bam;
+#get mapped reads
+samtools view -b -F 4 -f 8 ${sample}_SXX_L001_001.qtrim.p6Saln.sorted.bam > ${sample}_SXX_L001_001.qtrim.p6Saln.sorted.mapped1.bam;
+#samtools view -b -F 8 -f 4 ${sample}_SXX_L001_001.qtrim.p6Saln.sorted.bam > ${sample}_SXX_L001_001.qtrim.p6Saln.sorted.mapped2.bam;
+samtools view -b -F 12 -f 2 ${sample}_SXX_L001_001.qtrim.p6Saln.sorted.bam > ${sample}_SXX_L001_001.qtrim.p6Saln.sorted.mapped_both.bam;
+samtools merge -o ${sample}_p6Saln.merged.bam ${sample}_SXX_L001_001.qtrim.p6Saln.sorted.mapped1.bam ${sample}_SXX_L001_001.qtrim.p6Saln.sorted.mapped_both.bam;
+samtools sort -o ${sample}_p6Saln.merged.sorted.bam -T ./samtools_temp_dir5 --threads 24 ${sample}_p6Saln.merged.bam;
+samtools fastq -@ 8 ${sample}_p6Saln.merged.sorted.bam -1 ${sample}_p6Saln.merged.sorted_1.fastq -2 ${sample}_p6Saln.merged.sorted_2.fastq;
+samtools view -h -o ${sample}_p6Saln.merged.sorted.sam ${sample}_p6Saln.merged.sorted.bam;
+echo -e "contig\tposition\tdepth" > ${sample}_p6Saln.coverage;
+samtools depth ${sample}_p6Saln.merged.sorted.bam >> ${sample}_p6Saln.coverage;
+done
+
+${sample}_SXX_L001_001.qtrim.p6Saln.sorted.mapped2.bam
+
+#viewwed all in tabled with phi6_S ref, here are some notes: 
+S seg poor coverage
+
+A is ok frst halh depth is only like 150
+C low reads overall (<1000)
+D patchy
+E patchy
+K patchy
+O patchy
+P - similar to A, some low reagions but low spots are probably over 400 depth
+R is ok frst like 2500 bp depth is only like 150, wayt higher depth at end
+S patchy
+T - similar to A and P, some low regions but low spots are probably over 400 depth, except one low region with like 20 also low overall read count (<5000)
+W low overall reads <1000
+X low overall reads <1000
+
+M looks great - even, deep
+
+-- end Jan 2025 edits
 
 
 
@@ -474,8 +536,6 @@ sample_temp=${file%%_*};
 sample=$(basename $sample_temp); 
 spades.py --rnaviral --pe1-1 reads_to_phi6_ref/${sample}_merged_sorted_1.fastq --pe1-2 reads_to_phi6_ref/${sample}_merged_sorted_2.fastq -o spades/isolate/${sample}_isolate_spades_output;
 done
-
-
 
 
 
