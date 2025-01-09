@@ -400,15 +400,73 @@ X low overall reads <1000
 
 M looks great - even, deep
 
+
+
+#ok now lets try to get consensus files from sams. not sure if some ahve poor coverage bc phi6 isnt a close ref for them or if bc sequence data is bad
+
 for pair in *_SXX_L001_001.qtrim.p6Saln.sam; 
 #get leading sample name letter only
 do sample_temp=${pair%%_*};
 sample=$(basename $sample_temp);
-samtools consensus -o ${sample}_consensus.fasta --min-depth 60 ${sample}_p6Saln.merged.sorted.bam;
+samtools consensus -o ${sample}_p6Saln_consensus.fasta --min-depth 60 ${sample}_p6Saln.merged.sorted.bam;
+done
+
+#accidentally forgot to name with 'p6Saln' (fixed above now):
+#(dont need to redoo this)
+for pair in *_SXX_L001_001.qtrim.p6Saln.sam; 
+#get leading sample name letter only
+do sample_temp=${pair%%_*};
+sample=$(basename $sample_temp);
+mv ${sample}_consensus.fasta ${sample}_p6Saln_consensus.fasta;
+done
+
+#realign reads to new consensus seqs:
+
+#build phi6 S consensus databases:
+
+for pair in *_p6Saln_consensus.fasta; 
+#get leading sample name letter only
+do sample_temp=${pair%%_*};
+sample=$(basename $sample_temp);
+bowtie2-build ${sample}_p6Saln_consensus.fasta ${sample}_p6Saln_S_consensus_DB;
+done
+
+#go back up a dir so that we can access the fastqs
+cd ..
+
+#align each set of reads to the phi6 S consensus seq:
+for pair in ./fastqs/*_*R1*.fastq; 
+#get leading sample name letter only
+do sample_temp=${pair%%_*};
+sample=$(basename $sample_temp);
+bowtie2 -p 8 -x reads_to_phi6_S/${sample}_p6Saln_S_consensus_DB -1 ./trimmed_fastqs/${sample}_SXX_L001_R1_001.qtrim.fastq  -2 ./trimmed_fastqs/${sample}_SXX_L001_R2_001.qtrim.fastq  -S ./reads_to_phi6_S_consensus/${sample}_SXX_L001_001.qtrim.Sconsenaln.sam;
 done
 
 
-#ok now lets try to get consensus files from sams. not sure if some ahve poor coverage bc phi6 isnt a close ref for them or if bc sequence data is bad
+
+#do i have t do the whole soort and filter thing again...? I guess probably:
+
+#follow up actions:
+for pair in *_SXX_L001_001.qtrim.Sconsenaln.sam; 
+#get leading sample name letter only
+do sample_temp=${pair%%_*};
+sample=$(basename $sample_temp);
+#sam to bam
+samtools view -bS ${pair} > ${sample}_SXX_L001_001.qtrim.Sconsenaln.bam;
+#sort bam
+samtools sort -o ${sample}_SXX_L001_001.qtrim.Sconsenaln.sorted.bam -T ./samtools_temp_dir5 --threads 24 ${sample}_SXX_L001_001.qtrim.Sconsenaln.bam;
+#get mapped reads
+samtools view -b -F 4 -f 8 ${sample}_SXX_L001_001.qtrim.Sconsenaln.sorted.bam > ${sample}_SXX_L001_001.qtrim.Sconsenaln.sorted.mapped1.bam;
+#samtools view -b -F 8 -f 4 ${sample}_SXX_L001_001.qtrim.Sconsenaln.sorted.bam > ${sample}_SXX_L001_001.qtrim.Sconsenaln.sorted.mapped2.bam;
+samtools view -b -F 12 -f 2 ${sample}_SXX_L001_001.qtrim.Sconsenaln.sorted.bam > ${sample}_SXX_L001_001.qtrim.Sconsenaln.sorted.mapped_both.bam;
+samtools merge -o ${sample}_Sconsenaln.merged.bam ${sample}_SXX_L001_001.qtrim.Sconsenaln.sorted.mapped1.bam ${sample}_SXX_L001_001.qtrim.Sconsenaln.sorted.mapped_both.bam;
+samtools sort -o ${sample}_Sconsenaln.merged.sorted.bam -T ./samtools_temp_dir5 --threads 24 ${sample}_Sconsenaln.merged.bam;
+samtools fastq -@ 8 ${sample}_Sconsenaln.merged.sorted.bam -1 ${sample}_Sconsenaln.merged.sorted_1.fastq -2 ${sample}_Sconsenaln.merged.sorted_2.fastq;
+samtools view -h -o ${sample}_Sconsenaln.merged.sorted.sam ${sample}_Sconsenaln.merged.sorted.bam;
+echo -e "contig\tposition\tdepth" > ${sample}_Sconsenaln.coverage;
+samtools depth ${sample}_Sconsenaln.merged.sorted.bam >> ${sample}_Sconsenaln.coverage;
+done
+
 
 
 
