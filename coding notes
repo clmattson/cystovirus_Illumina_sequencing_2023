@@ -239,8 +239,13 @@ spades.py --meta --pe1-1 final_trimmed_fastqs/${sample}_SXX_L001_001.R1.qhtrim.u
 done
 
 
+#srun ran out of time before it completed all the samples (~48 hrs). Complete V W and X:
 
+declare -a arr=("V" "W" "X")
 
+for sample in "${arr[@]}";
+do spades.py --meta --pe1-1 final_trimmed_fastqs/${sample}_SXX_L001_001.R1.qhtrim.unmapped.sorted2.fastq --pe1-2 final_trimmed_fastqs/${sample}_SXX_L001_001.R2.qhtrim.unmapped.sorted2.fastq -o spades/meta/${sample}_metaviral_spades_output;
+done
 
 
 
