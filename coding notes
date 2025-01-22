@@ -250,14 +250,27 @@ done
 #done
 
 
-#move contigs files to letter namees:
+#move contigs & scaffolds files to letter namees:
 
 for direct in *_meta_spades_output; 
 do file=$(basename $direct); 
 sample=${file##*/}
 sample=${file%%_*}; 
-mv ${sample}_meta_spades_output/contigs.fasta ${sample}_meta_spades_output/${sample}_contigs.fasta;
+mv ${sample}_meta_spades_output/contigs.fasta ${sample}_meta_spades_output/${sample}_meta_spades_contigs.fasta;
+mv ${sample}_meta_spades_output/scaffolds.fasta ${sample}_meta_spades_output/${sample}_meta_spades_scaffolds.fasta;
 done
+
+#check if major scaffolds and contigs are the same: 
+for i in  */*_*_*_*.fasta; do echo $i; grep '>' $i | head -6; echo;  done
+#okay looks like theyre really similar but not identical
+
+#blast scaffolds and align reads to them.
+
+
+
+
+
+
 
 
 
