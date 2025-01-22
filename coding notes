@@ -266,6 +266,37 @@ for i in  */*_*_*_*.fasta; do echo $i; grep '>' $i | head -6; echo;  done
 
 #blast scaffolds and align reads to them.
 
+#blasting, code adapted from the ONT code:
+
+#gets only sample letter from assembly folder name:
+for direct in *_meta_spades_output; 
+do file=$(basename $direct); 
+sample=${file##*/}
+sample=${file%%_*}; 
+#can add line here to remove contig header whitespace if necessary
+#blast the current assembly against phi6 S segment reference
+
+blastn -query ${sample}_meta_spades_output/${sample}_meta_spades_scaffolds.fasta -subject phi6_S.fasta -outfmt '6 delim=,' -qcov_hsp_perc 20 >> ${sample}_meta_spades_scaffolds_M_blastout.csv;
+        blast_check="$(cat ${sample}_meta_spades_scaffolds_M_blastout.csv)"
+        if [ -n "${blast_check}" ]; then
+                echo "${barcode} ${blast_check} not empty"
+                #makes file with contig names only
+                awk -F"," '{print $1}' ${barcode}_M_blast_out.csv > ${barcode}_M_blast_readlist.txt;
+                #gets most frequent read
+                m_top="$(cut -d' ' -f1 ${barcode}_M_blast_readlist.txt | sort | uniq -c | sort -rn | head -n1 | awk '{print $2}')";
+                echo "${barcode} _${m_top}_"
+                echo ${m_top} >> m_contigs_blast.txt;
+                #if [ -n "{$m_top}" ]; then
+                #echo "${barcode}_${m_top}_not empty!";
+                cat m_contigs_blast.txt | awk '{gsub("_","\\_",$0);$0="(?s)^>"$0".*?(?=\\n(\\z|>))"}1' | pcregrep -oM -f - ${assembly} >> m_contigs_blast.fasta;
+        fi;
+done
+
+
+
+
+
+
 
 
 
