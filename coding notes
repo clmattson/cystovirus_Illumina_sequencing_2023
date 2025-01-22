@@ -231,6 +231,8 @@ OK maybe spades --rnaviral assumes something untrue about recombination or somet
 
 #Jan 2025 updates - try --meta spades instead? 
 
+#can speed up by adding more cores to the slurm (I used 6 instead of 1 and it took like a day instead of 3 days)
+
 for pair in final_trimmed_fastqs/*_SXX_L001_001.R1.qhtrim.unmapped.sorted2.fastq; 
 do file=$(basename $pair); 
 sample_temp=${file%%_*}; 
@@ -241,13 +243,21 @@ done
 
 #srun ran out of time before it completed all the samples (~48 hrs). Complete V W and X:
 
-declare -a arr=("V" "W" "X")
+#eclare -a arr=("V" "W" "X")
 
-for sample in "${arr[@]}";
-do spades.py --meta --pe1-1 final_trimmed_fastqs/${sample}_SXX_L001_001.R1.qhtrim.unmapped.sorted2.fastq --pe1-2 final_trimmed_fastqs/${sample}_SXX_L001_001.R2.qhtrim.unmapped.sorted2.fastq -o spades/meta/${sample}_meta_spades_output;
+#for sample in "${arr[@]}";
+#do spades.py --meta --pe1-1 final_trimmed_fastqs/${sample}_SXX_L001_001.R1.qhtrim.unmapped.sorted2.fastq --pe1-2 final_trimmed_fastqs/${sample}_SXX_L001_001.R2.qhtrim.unmapped.sorted2.fastq -o spades/meta/${sample}_meta_spades_output;
+#done
+
+
+#move contigs files to letter namees:
+
+for direct in *_meta_spades_output; 
+do file=$(basename $direct); 
+sample=${file##*/}
+sample=${file%%_*}; 
+mv ${sample}_meta_spades_output/contigs.fasta ${sample}_meta_spades_output/${sample}_contigs.fasta;
 done
-
-
 
 
 
