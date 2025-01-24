@@ -328,6 +328,26 @@ done
 for i in *_meta_spades_output/*L*scaffolds*.fasta;  do echo $i; grep '>' $i | head -6; echo; done
 
 
+#filter out low cov scaffolds
+#align reads to blast hits
+
+
+
+#print out only cov from fasta headers:
+for i in $(grep '>' A_meta_spadesfasta); do echo ${i##*_}; done
+
+#checklist:
+
+- scaffold length
+- scaffold cov 
+- reads align to scaffold? 
+- sample tot reads
+
+
+
+
+
+
 
 
 
