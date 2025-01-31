@@ -97,14 +97,12 @@ sample=$(basename $sample_temp);
 samtools fastq -@ 8 ${sample}_L001_001.qhtrim.unmapped.sorted2.bam -1 ${sample}_L001_001.R1.qhtrim.unmapped.sorted2.fastq -2 ${sample}_L001_001.R2.qhtrim.unmapped.sorted2.fastq;
 done
 
-
+#move to final_trimmed_fastqs
 
 #assembly
 #--metaviral
-for pair in final_trimmed_fastqs/*_SXX_L001_001.R1.qhtrim.unmapped.sorted2.fastq; 
-do file=$(basename $pair); 
-sample_temp=${file%%_*}; 
-sample=$(basename $sample_temp); 
+
+
 spades.py --metaviral --pe1-1 final_trimmed_fastqs/${sample}_SXX_L001_001.R1.qhtrim.unmapped.sorted2.fastq --pe1-2 final_trimmed_fastqs/${sample}_SXX_L001_001.R2.qhtrim.unmapped.sorted2.fastq -o spades/metaviral/${sample}_metaviral_spades_output;
 done
 
@@ -351,17 +349,17 @@ for i in $(grep '>' A_meta_spadesfasta); do echo ${i##*_}; done
 
 
 
+### okay go back and do read normalization before genome assembly!
 
 
-#gets most frequent read
-                m_top="$(cut -d' ' -f1 ${barcode}_M_blast_readlist.txt | sort | uniq -c | sort -rn | head -n1 | awk '{print $2}')";
-                echo "${barcode} _${m_top}_"
-                echo ${m_top} >> m_contigs_blast.txt;
-                #if [ -n "{$m_top}" ]; then
-                #echo "${barcode}_${m_top}_not empty!";
-                cat m_contigs_blast.txt | awk '{gsub("_","\\_",$0);$0="(?s)^>"$0".*?(?=\\n(\\z|>))"}1' | pcregrep -oM -f - ${assembly} >> m_contigs_blast.fasta;
-        fi;
+for pair in final_trimmed_fastqs/*_SXX_L001_001.R1.qhtrim.unmapped.sorted2.fastq; 
+do file=$(basename $pair); 
+sample_temp=${file%%_*}; 
+sample=$(basename $sample_temp); 
+bbnorm.sh target=56 maxdepth=65 in=final_trimmed_fastqs/${sample}_L001_001.R1.qhtrim.unmapped.sorted2.fastq in2=final_trimmed_fastqs/${sample}_L001_001.R2.qhtrim.unmapped.sorted2.fastq out=normalized_trimmed_reads/${sample}_L001_001.R1.qhtrim.unmapped.sorted2.bbnorm.fastq out2=normalized_trimmed_reads/${sample}_L001_001.R2.qhtrim.unmapped.sorted2.bbnorm.fastq hist=normalized_trimmed_reads/${sample}_bbnorm_histogram_out; 
 done
+
+
 
 
 
