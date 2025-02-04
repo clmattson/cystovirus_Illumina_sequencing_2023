@@ -360,6 +360,7 @@ done
 
 #now retry meta spades and base spades after normalizing
 
+
 #first make a tmux session and do more cores (6) in the slurm command
  srun -c 6 -t 30:00:00 --mem=20000 --pty /bin/bash
 
