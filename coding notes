@@ -374,6 +374,7 @@ done
 
 
 #regular spades run:
+#(didnt do yet)..
 
 for pair in normalized_trimmed_reads/*_SXX_L001_001.R1.qhtrim.unmapped.sorted2.bbnorm.fastq; 
 do file=$(basename $pair); 
@@ -388,10 +389,16 @@ done
 for pair in final_trimmed_fastqs/*_SXX_L001_001.R1.qhtrim.unmapped.sorted2.fastq;  
 do file=$(basename $pair);  sample_temp=${file%%_*};  
 sample=$(basename $sample_temp);  
-bbnorm.sh tgt=200 max=210 in=final_trimmed_fastqs/${sample}_SXX_L001_001.R1.qhtrim.unmapped.sorted2.fastq in2=final_trimmed_fastqs/${sample}_SXX_L001_001.R2.qhtrim.unmapped.sorted2.fastq out=normalized_trimmed_reads/${sample}_SXX_L001_001.R1.qhtrim.unmapped.sorted2.bbnorm.fastq out2=normalized_trimmed_reads/${sample}_SXX_L001_001.R2.qhtrim.unmapped.sorted2.bbnorm.fastq hist=normalized_trimmed_reads/${sample}_bbnorm_histogram_out;  
+bbnorm.sh tgt=225 max=250 in=final_trimmed_fastqs/${sample}_SXX_L001_001.R1.qhtrim.unmapped.sorted2.fastq in2=final_trimmed_fastqs/${sample}_SXX_L001_001.R2.qhtrim.unmapped.sorted2.fastq out=normalized2_trimmed_reads/${sample}_SXX_L001_001.R1.qhtrim.unmapped.sorted2.bbnorm2.fastq out2=normalized2_trimmed_reads/${sample}_SXX_L001_001.R2.qhtrim.unmapped.sorted2.bbnorm2.fastq hist=normalized2_trimmed_reads/${sample}_bbnorm2_histogram_out;  
 done
 
-
+#re-do meta spades run (with new tmux sess too):
+for pair in normalized_trimmed_reads/*_SXX_L001_001.R1.qhtrim.unmapped.sorted2.bbnorm.fastq; 
+do file=$(basename $pair); 
+sample_temp=${file%%_*}; 
+sample=$(basename $sample_temp); 
+spades.py --meta --pe1-1 normalized2_trimmed_reads/${sample}_SXX_L001_001.R1.qhtrim.unmapped.sorted2.bbnorm2.fastq --pe1-2 normalized2_trimmed_reads/${sample}_SXX_L001_001.R2.qhtrim.unmapped.sorted2.bbnorm2.fastq -o spades/norm2_meta/${sample}_norm2_meta_spades_output;
+done
 
 
 
