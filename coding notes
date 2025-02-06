@@ -349,6 +349,9 @@ for i in $(grep '>' A_meta_spadesfasta); do echo ${i##*_}; done
 
 
 
+
+
+
 ### okay go back and do read normalization before genome assembly!
 
 
@@ -418,7 +421,30 @@ sample=$(basename $sample_temp);
 spades.py --meta --pe1-1 normalized3_trimmed_reads/${sample}_SXX_L001_001.R1.qhtrim.unmapped.sorted2.bbnorm3.fastq --pe1-2 normalized3_trimmed_reads/${sample}_SXX_L001_001.R2.qhtrim.unmapped.sorted2.bbnorm3.fastq -o spades/norm3_meta/${sample}_norm3_meta_spades_output;
 done
 
+for direct in *_norm3_meta_spades_output; 
+do file=$(basename $direct); 
+sample=${file##*/}
+sample=${file%%_*}; 
+mv ${sample}_norm3_meta_spades_output/contigs.fasta ${sample}_norm3_meta_spades_output/${sample}_norm3_meta_spades_contigs.fasta;
+mv ${sample}_norm3_meta_spades_output/scaffolds.fasta ${sample}_norm3_meta_spades_output/${sample}_norm3_meta_spades_scaffolds.fasta;
+done
 
+
+for direct in *_norm3_meta_spades_output; 
+do file=$(basename $direct); 
+sample=${file##*/}
+sample=${file%%_*}; 
+#can add line here to remove contig header whitespace if necessary
+#blast the current assembly against phi6 M segment reference
+blastn -query ${sample}_norm3_meta_spades_output/${sample}_norm3_meta_spades_scaffolds.fasta -subject phi6_M.fasta -outfmt '6 delim=,' -qcov_hsp_perc 20 >  ${sample}_norm3_meta_spades_output/${sample}_norm3_meta_spades_scaffolds_M_blastout.csv;
+        blast_check="$(cat ${sample}_norm3_meta_spades_output/${sample}_norm3_meta_spades_scaffolds_M_blastout.csv)"
+        if [ -n "${blast_check}" ]; then
+                echo "${sample} ${blast_check} not empty"
+                #makes file with scaffold names only
+                awk -F"," '{print $1}' ${sample}_norm3_meta_spades_output/${sample}_norm3_meta_spades_scaffolds_M_blastout.csv > ${sample}_norm3_meta_spades_output/${sample}_norm3_meta_spades_scaffolds_M_blastout_names.txt;
+                cat ${sample}_norm3_meta_spades_output/${sample}_norm3_meta_spades_scaffolds_M_blastout_names.txt | awk '{gsub("_","\\_",$0);$0="(?s)^>"$0".*?(?=\\n(\\z|>))"}1' | pcregrep -oM -f - ${sample}_norm3_meta_spades_output/${sample}_norm3_meta_spades_scaffolds.fasta >> ${sample}_norm3_meta_spades_output/${sample}_norm3_meta_spades_M_scaffolds.fasta
+        fi;
+done
 
 
 
