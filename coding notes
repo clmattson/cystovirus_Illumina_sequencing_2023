@@ -467,6 +467,12 @@ echo;
 done;
 thirty_perc_cov=$(echo "${sorted_cov_list[0]} * 0.3" | bc);
 echo "30% of max cov = "; echo $thirty_perc_cov;
+for value in "${sorted_cov_list[@]}"; do
+  if (( $(echo "$value < $thirty_perc_cov" | bc -l) -eq 0 )); then
+    filtered_values+=("$value")
+  fi;
+done;
+echo $filtered_values[@];
 echo "next file"; 
 done
 
