@@ -452,21 +452,22 @@ done
 
 
 #get covereage numbers: 
-for i in *_norm3_meta_spades_output/*scaffolds.fasta; 
-do for j in $(grep '>' $i); 
-#args=("");
-do echo $j; 
-cov=${j##*_};
+for file in *_norm3_meta_spades_output/*scaffolds.fasta; 
+do cov_list=("");
+for scaff in $(grep '>' $file); 
+do echo $scaff; 
+cov=${scaff##*_};
 echo; 
 echo ${cov};
-#k=$(echo "$cov - 10" | bc);
-args+=("${cov}");
-echo ${args[@]} | sort -n | tail -1;
-echo $k;
-echo "next j"; 
+cov_list+=("${cov}");
+sorted_cov_list=(`printf '%s\n' "${cov_list[@]}" | sort -gr`);
+echo ${sorted_cov_list[@]};
+echo "next scaff"; 
 echo; 
-done; 
-echo "next i"; 
+done;
+thirty_perc_cov=$(echo "${sorted_cov_list[0]} * 0.3" | bc);
+echo "30% of max cov = "; echo $thirty_perc_cov;
+echo "next file"; 
 done
 
 
