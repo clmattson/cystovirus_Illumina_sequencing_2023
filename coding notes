@@ -448,6 +448,25 @@ done
 
 
 
+#filter out reads that are lower than 20% of the max kmer coverage
+
+
+#get covereage numbers: 
+for i in *_norm3_meta_spades_output/*scaffolds.fasta; 
+do for j in $(grep '>' $i); 
+do echo $j; 
+cov=${j##*_}
+echo; 
+echo ${cov};
+echo ${cov}-10;
+echo "next j"; 
+echo; 
+done; 
+echo "next i"; 
+done
+
+
+
 
 
 #okay and also do base spades
