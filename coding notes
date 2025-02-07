@@ -452,28 +452,27 @@ done
 
 
 #get covereage numbers: 
-for file in *_norm3_meta_spades_output/*scaffolds.fasta; 
+for file in *_norm3_meta_spades_output/*M*scaffolds.fasta; 
 do cov_list=("");
+fileonly=$(basename $file); 
+sample=${fileonly##*/};
+sample=${fileonly%%_*};
+echo "finding scaffolds with kmer cov > 30% of max for sample ${sample}";
 for scaff in $(grep '>' $file); 
-do echo $scaff; 
-cov=${scaff##*_};
-echo; 
-echo ${cov};
+do cov=${scaff##*_};
 cov_list+=("${cov}");
-sorted_cov_list=(`printf '%s\n' "${cov_list[@]}" | sort -gr`);
-echo ${sorted_cov_list[@]};
-echo "next scaff"; 
-echo; 
+sorted_cov_list=(`printf '%s\n' "${cov_list[@]}" | sort -gr`); 
 done;
 thirty_perc_cov=$(echo "${sorted_cov_list[0]} * 0.3" | bc);
-echo "30% of max cov = "; echo $thirty_perc_cov;
+echo "30% of max cov = $thirty_perc_cov";
+filtered_values=("");
 for value in "${sorted_cov_list[@]}"; do
-  if (( $(echo "$value < $thirty_perc_cov" | bc -l) -eq 0 )); then
+  if (( $(echo "$value > $thirty_perc_cov" |bc -l) )); then
     filtered_values+=("$value")
   fi;
 done;
-echo $filtered_values[@];
-echo "next file"; 
+echo "values above 30% = ${filtered_values[@]}";
+echo;
 done
 
 
