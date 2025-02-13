@@ -460,6 +460,7 @@ for file in *_norm3_meta_spades_output/*_norm3_meta_spades_M_scaffolds.fasta;
   #get sample letter from file name:
   #sample=${fileonly##*/};
   sample=${fileonly%%_*};
+  echo "sample,num scaffolds,max length,min length,max cov,min cov" > M_all_sample_scaffold_info.csv
   echo "finding scaffolds with kmer cov > 30% of max for sample ${sample}";
   #loop thru the scaffold headers in the current sample scaffold file:
   for scaff in $(grep '>' $file); 
@@ -503,10 +504,15 @@ for file in *_norm3_meta_spades_output/*_norm3_meta_spades_M_scaffolds.fasta;
   #after going thru whole file, add the sequences baseed on the filtered headers to new fasta called ..covfilt...fasta
   awk 'BEGIN{FS="\n";RS=">";ORS=""} (NR==FNR)&&(NR>1){headers[$1];next} ($1 in headers){print ">" $0}' ${sample}_norm3_meta_spades_output/${fileonly}_covfilt_names.txt ${sample}_norm3_meta_spades_output/${sample}_norm3_meta_spades_M_scaffolds.fasta >> ${sample}_norm3_meta_spades_output/${sample}_norm3_meta_spades_M_covfilt_scaffolds.fasta;
   echo "kcov values above 30% or 300 = ${filtered_cov_values[@]}";
+  echo "${sample},${filtered_len_values[0]},min length,${filtered_cov_values[0]},min cov" > M_all_sample_scaffold_info.csv
   echo;
 done
 
 
+#to do: 
+okay get it to output a table, per segment (s/m/l)
+headers: # scaffolds, max length, min length, max cov, min cov
+rows = sample (aka letter)
 ################################################################################################
 
 for file in *_norm3_meta_spades_output/*_norm3_meta_spades_M_scaffolds.fasta; 
