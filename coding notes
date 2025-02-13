@@ -452,31 +452,118 @@ done
 
 
 #get covereage numbers: 
-for file in *_norm3_meta_spades_output/*M*scaffolds.fasta; 
-do cov_list=("");
-fileonly=$(basename $file); 
-sample=${fileonly##*/};
-sample=${fileonly%%_*};
-echo "finding scaffolds with kmer cov > 30% of max for sample ${sample}";
-for scaff in $(grep '>' $file); 
-do cov=${scaff##*_};
-cov_list+=("${cov}");
-sorted_cov_list=(`printf '%s\n' "${cov_list[@]}" | sort -gr`); 
-done;
-thirty_perc_cov=$(echo "${sorted_cov_list[0]} * 0.3" | bc);
-echo "30% of max cov = $thirty_perc_cov";
-filtered_values=("");
-for value in "${sorted_cov_list[@]}"; do
-  if (( $(echo "$value > $thirty_perc_cov" |bc -l) )); then
-    filtered_values+=("$value")
+for file in *_norm3_meta_spades_output/*_norm3_meta_spades_M_scaffolds.fasta; 
+  do cov_list=();
+  len_list=();
+  #get filename
+  fileonly=$(basename $file); 
+  #get sample letter from file name:
+  #sample=${fileonly##*/};
+  sample=${fileonly%%_*};
+  echo "finding scaffolds with kmer cov > 30% of max for sample ${sample}";
+  #loop thru the scaffold headers in the current sample scaffold file:
+  for scaff in $(grep '>' $file); 
+
+    #extract coverage value (as string)
+    do cov=${scaff##*_};
+    #add kmer ov value to list
+    cov_list+=("${cov}");
+    #sort the list based on numerical value, largest to smallest
+    sorted_cov_list=(`printf '%s\n' "${cov_list[@]}" | sort -gr`); 
+
+    #extract length value (as string)
+    len=${scaff##*length_};
+    len=${len%%_*};
+    #add kmer ov value to list
+    len_list+=("${len}");
+    #sort the list based on numerical value, largest to smallest
+    sorted_len_list=(`printf '%s\n' "${len_list[@]}" | sort -gr`); 
+
+  done;
+  #calculate a % of the max cov value:
+  thirty_perc_cov=$(echo "${sorted_cov_list[0]} * 0.3" | bc);
+  echo "30% of max cov = $thirty_perc_cov";
+  filtered_cov_values=();
+
+  #calculate %of the max length value:
+  twenty_perc_len=$(echo "${sorted_len_list[0]} * 0.2" | bc);
+  echo "20% of max len = $twenty_perc_len";
+  filtered_len_values=();
+
+  #loop thru the list of sorted coverage values to get values over the cutoff determined above:
+  for cov_value in "${sorted_cov_list[@]}"; do
+    #test if current value is bigger than the cutoff
+    if (( $(echo "$cov_value > $thirty_perc_cov" |bc -l) || $(echo "$cov_value > 300" |bc -l) )); then
+      #if true then add the cov_value to a list called filtered_cov_values
+      filtered_cov_values+=("$cov_value");
+      #grep the current true value in the fasta to get full header name and add it to a txt:
+      grep ${cov_value} $file >> ${sample}_norm3_meta_spades_output/${fileonly}_covfilt_names.txt;
+    fi;
+  done;
+  #after going thru whole file, add the sequences baseed on the filtered headers to new fasta called ..covfilt...fasta
+  awk 'BEGIN{FS="\n";RS=">";ORS=""} (NR==FNR)&&(NR>1){headers[$1];next} ($1 in headers){print ">" $0}' ${sample}_norm3_meta_spades_output/${fileonly}_covfilt_names.txt ${sample}_norm3_meta_spades_output/${sample}_norm3_meta_spades_M_scaffolds.fasta >> ${sample}_norm3_meta_spades_output/${sample}_norm3_meta_spades_M_covfilt_scaffolds.fasta;
+  echo "kcov values above 30% or 300 = ${filtered_cov_values[@]}";
+  echo;
+done
+
+
+################################################################################################
+
+for file in *_norm3_meta_spades_output/*_norm3_meta_spades_M_scaffolds.fasta; 
+  do cov_list=();
+  len_list=();
+  #get filename
+  fileonly=$(basename $file); 
+  #get sample letter from file name:
+  #sample=${fileonly##*/};
+  sample=${fileonly%%_*};
+  echo "finding scaffolds with kmer cov > 30% of max for sample ${sample}";
+  #loop thru the scaffold headers in the current sample scaffold file:
+  for scaff in $(grep '>' $file); 
+    #extract coverage value (as string)
+    do cov=${scaff##*_};
+    echo "current scaffold = ${scaff}"
+    #add kmer ov value to list
+    cov_list+=("${cov}");
+    #sort the list based on numerical value, largest to smallest
+    sorted_cov_list=(`printf '%s\n' "${cov_list[@]}" | sort -gr`); 
+
+    #extract length value (as string)
+    len=${scaff##*length_};
+    len=${len%%_*};
+    #add kmer ov value to list
+    len_list+=("${len}");
+    #sort the list based on numerical value, largest to smallest
+    sorted_len_list=(`printf '%s\n' "${len_list[@]}" | sort -gr`); 
+    #echo "len values = ${sorted_len_list[@]} for $sample";
+
+  done;
+  #calculate a % of the max cov value:
+  thirty_perc_cov=$(echo "${sorted_cov_list[0]} * 0.3" | bc);
+  echo "30% of max cov = $thirty_perc_cov";
+  filtered_cov_values=();
+
+  #calculate %of the max length value:
+  twenty_perc_len=$(echo "${sorted_len_list[0]} * 0.2" | bc);
+  echo "20% of max len = $twenty_perc_len";
+  filtered_len_values=();
+
+  for i in $(seq 0 $( echo "$(grep -c '>' $file)" | bc)); 
+  do if ( (( $(echo "${cov_list[i]} > $thirty_perc_cov" |bc -l) )) || (( $(echo "${cov_list[i]} > 300" |bc -l) )) ) && ( (( $(echo "${len_list[i]} > $twenty_perc_len" |bc -l) )) || (( $(echo "${len_list[i]} > 800" |bc -l) )) ); then
+    filtered_cov_values+=("${cov_list[i]}");
+    filtered_len_values+=("${len_list[i]}");
+    grep ${cov_list[i]} $file >> ${sample}_norm3_meta_spades_output/${fileonly}_covlenfilt_names.txt;
   fi;
-done;
-echo "values above 30% = ${filtered_values[@]}";
-echo;
+  done;
+  #after going thru whole file, add the sequences baseed on the filtered headers to new fasta called ..covfilt...fasta
+  awk 'BEGIN{FS="\n";RS=">";ORS=""} (NR==FNR)&&(NR>1){headers[$1];next} ($1 in headers){print ">" $0}' ${sample}_norm3_meta_spades_output/${fileonly}_covlenfilt_names.txt ${sample}_norm3_meta_spades_output/${sample}_norm3_meta_spades_M_scaffolds.fasta >> ${sample}_norm3_meta_spades_output/${sample}_norm3_meta_spades_M_covlenfilt_scaffolds.fasta;
+  echo "kcov values above 30% or 300 = ${filtered_cov_values[@]} + length values above 20% or 800 = ${filtered_len_values[@]}";
+  echo;
 done
 
 
 
+#######################################################################################
 
 
 #okay and also do base spades
