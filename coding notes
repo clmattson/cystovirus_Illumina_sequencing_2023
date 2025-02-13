@@ -524,7 +524,9 @@ for file in *_norm3_meta_spades_output/*_norm3_meta_spades_M_scaffolds.fasta;
     do cov=${scaff##*_};
     echo "current scaffold = ${scaff}"
     #add kmer ov value to list
-    cov_list+=("${cov}");
+    if (( $(echo "$cov > 15" |bc -l) )); then
+      do cov_list+=("${cov}");
+    fi;
     #sort the list based on numerical value, largest to smallest
     sorted_cov_list=(`printf '%s\n' "${cov_list[@]}" | sort -gr`); 
 
