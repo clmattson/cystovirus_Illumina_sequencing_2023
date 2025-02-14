@@ -515,6 +515,9 @@ headers: # scaffolds, max length, min length, max cov, min cov
 rows = sample (aka letter)
 ################################################################################################
 
+#print output to file with the following headers: 
+echo "sample,num scaffolds,max scaffold length,min scaffold length,max kmer coverage,min kmer coverage" > M_all_scaffold_stats.csv
+
 for file in *_norm3_meta_spades_output/*_norm3_meta_spades_M_scaffolds.fasta; 
   do cov_list=();
   len_list=();
@@ -531,7 +534,7 @@ for file in *_norm3_meta_spades_output/*_norm3_meta_spades_M_scaffolds.fasta;
     echo "current scaffold = ${scaff}"
     #add kmer ov value to list
     if (( $(echo "$cov > 15" |bc -l) )); then
-      do cov_list+=("${cov}");
+      cov_list+=("${cov}");
     fi;
     #sort the list based on numerical value, largest to smallest
     sorted_cov_list=(`printf '%s\n' "${cov_list[@]}" | sort -gr`); 
@@ -557,17 +560,20 @@ for file in *_norm3_meta_spades_output/*_norm3_meta_spades_M_scaffolds.fasta;
   filtered_len_values=();
 
   for i in $(seq 0 $( echo "$(grep -c '>' $file)" | bc)); 
-  do if ( (( $(echo "${cov_list[i]} > $thirty_perc_cov" |bc -l) )) || (( $(echo "${cov_list[i]} > 300" |bc -l) )) ) && ( (( $(echo "${len_list[i]} > $twenty_perc_len" |bc -l) )) || (( $(echo "${len_list[i]} > 800" |bc -l) )) ); then
-    filtered_cov_values+=("${cov_list[i]}");
-    filtered_len_values+=("${len_list[i]}");
-    grep ${cov_list[i]} $file >> ${sample}_norm3_meta_spades_output/${fileonly}_covlenfilt_names.txt;
-  fi;
+    do if ( (( $(echo "${cov_list[i]} > $thirty_perc_cov" |bc -l) )) || (( $(echo "${cov_list[i]} > 300" |bc -l) )) ) && ( (( $(echo "${len_list[i]} > $twenty_perc_len" |bc -l) )) || (( $(echo "${len_list[i]} > 800" |bc -l) )) ); then
+      filtered_cov_values+=("${cov_list[i]}");
+      filtered_len_values+=("${len_list[i]}");
+      grep ${cov_list[i]} $file >> ${sample}_norm3_meta_spades_output/${fileonly}_covlenfilt_names.txt;
+    fi;
   done;
   #after going thru whole file, add the sequences baseed on the filtered headers to new fasta called ..covfilt...fasta
   awk 'BEGIN{FS="\n";RS=">";ORS=""} (NR==FNR)&&(NR>1){headers[$1];next} ($1 in headers){print ">" $0}' ${sample}_norm3_meta_spades_output/${fileonly}_covlenfilt_names.txt ${sample}_norm3_meta_spades_output/${sample}_norm3_meta_spades_M_scaffolds.fasta >> ${sample}_norm3_meta_spades_output/${sample}_norm3_meta_spades_M_covlenfilt_scaffolds.fasta;
   echo "kcov values above 30% or 300 = ${filtered_cov_values[@]} + length values above 20% or 800 = ${filtered_len_values[@]}";
   echo;
+  echo "${sample},$(grep -c '>' ${sample}_norm3_meta_spades_output/${sample}_norm3_meta_spades_M_covlenfilt_scaffolds.fasta),${filtered_len_values[0]},${filtered_len_values[-1]},${filtered_cov_values[0]},${filtered_cov_values[-1]}" >> M_all_scaffold_stats.csv;
 done
+
+
 
 
 
