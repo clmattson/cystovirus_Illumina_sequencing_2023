@@ -1,5 +1,10 @@
 #!/bin/bash
 
+#to do:
+#run script on non-normalized data. maybe switch output to like less long format version?  
+#get pariwaise alignment %s for filtered scaffold files and add to info table. 
+
+
 #get input:
 
 #no paths used, make sure to run in the directory where all the assembly output follders are stored. phi6 refs have to be stored here too for blast
