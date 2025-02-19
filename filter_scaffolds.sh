@@ -298,3 +298,123 @@ for file in *${sample_suffix}_output/*${sample_suffix}_L_scaffolds.fasta;
   echo;
   echo "${sample},L,$(grep -c '>' ${sample}${sample_suffix}_output/${sample}${sample_suffix}_L_covlenfilt_scaffolds.fasta),${sort_filt_len_values[0]},${sort_filt_len_values[-1]},${sort_filt_cov_values[0]},${sort_filt_cov_values[-1]}" >> L_all_scaffold_stats.csv;
 done
+
+
+
+#compute pairwise identity with clustalw
+#sed -i '1{s/$/,avg scaffold pairwise identity,/}' L_all_scaffold_stats.csv
+
+
+for file in *${sample_suffix}_output/*${sample_suffix}_L_scaffolds.fasta; 
+  #get filename
+  do fileonly=$(basename $file); 
+  #get sample letter from file namel
+  #sample=${fileonly##*/};
+  sample=${fileonly%%_*};
+   
+  cp ${sample}${sample_suffix}_output/${sample}${sample_suffix}_L_covlenfilt_scaffolds.fasta test;
+  clustalw test;clustalw -outputtree=dist -tree -infile=test.aln;l test.aln;lls test.dst;
+  cp test.dst ${sample}${sample_suffix}_output/${sample}${sample_suffix}_L_covlenfilt_clustal.dst;
+  dist_arr=();
+  sort_dist_arr=();
+  sum=0;
+  for line in $(grep 'NODE' test.dst); 
+    do for word in $line; 
+      do if (( $(echo "$word > 0" |bc -l) )); then
+        echo $word;
+        dist_arr+=("${word}");
+        sum=$(echo "$sum + $word"|bc -l);
+      fi;
+    done;
+  done
+len=${#dist_arr[@]}
+sort_dist_arr=(`printf '%s\n' "${dist_arr[@]}" | sort -gr`); 
+avg=$(echo "$sum/$len"|bc -l)
+line=$(grep -no "${sample}," L_all_scaffold_stats.test.csv);
+
+sed -i "${line%%:*}{s/$/,${avg},${sort_dist_arr[0]},${sort_dist_arr[-1]}/}" L_all_scaffold_stats.test.csv;
+
+rm test*
+done
+
+
+
+for file in *${sample_suffix}_output/*${sample_suffix}_M_scaffolds.fasta; 
+  #get filename
+  do fileonly=$(basename $file); 
+  #get sample letter from file namel
+  #sample=${fileonly##*/};
+  sample=${fileonly%%_*};
+   
+  cp ${sample}${sample_suffix}_output/${sample}${sample_suffix}_M_covlenfilt_scaffolds.fasta test;
+  clustalw test;clustalw -outputtree=dist -tree -infile=test.aln;l test.aln;lls test.dst;
+  cp test.dst ${sample}${sample_suffix}_output/${sample}${sample_suffix}_M_covlenfilt_clustal.dst;
+  dist_arr=();
+  sort_dist_arr=();
+  sum=0;
+  for line in $(grep 'NODE' test.dst); 
+    do for word in $line; 
+      do if (( $(echo "$word > 0" |bc -l) )); then
+        echo $word;
+        dist_arr+=("${word}");
+        sum=$(echo "$sum + $word"|bc -l);
+      fi;
+    done;
+  done
+len=${#dist_arr[@]}
+sort_dist_arr=(`printf '%s\n' "${dist_arr[@]}" | sort -gr`); 
+avg=$(echo "$sum/$len"|bc -l)
+line=$(grep -no "${sample}," M_all_scaffold_stats.test.csv);
+
+sed -i "${line%%:*}{s/$/,${avg},${sort_dist_arr[0]},${sort_dist_arr[-1]}/}" M_all_scaffold_stats.test.csv;
+
+rm test*
+done
+
+for file in *${sample_suffix}_output/*${sample_suffix}_S_scaffolds.fasta; 
+  #get filename
+  do fileonly=$(basename $file); 
+  #get sample letter from file namel
+  #sample=${fileonly##*/};
+  sample=${fileonly%%_*};
+   
+  cp ${sample}${sample_suffix}_output/${sample}${sample_suffix}_S_covlenfilt_scaffolds.fasta test;
+  clustalw test;clustalw -outputtree=dist -tree -infile=test.aln;l test.aln;l test.dst;
+  cp test.dst ${sample}${sample_suffix}_output/${sample}${sample_suffix}_S_covlenfilt_clustal.dst;
+  dist_arr=();
+  sort_dist_arr=();
+  sum=0;
+  for line in $(grep 'NODE' test.dst); 
+    do for word in $line; 
+      do if (( $(echo "$word > 0" |bc -l) )); then
+        echo $word;
+        dist_arr+=("${word}");
+        sum=$(echo "$sum + $word"|bc -l);
+      fi;
+    done;
+  done
+len=${#dist_arr[@]}
+sort_dist_arr=(`printf '%s\n' "${dist_arr[@]}" | sort -gr`); 
+avg=$(echo "$sum/$len"|bc -l)
+line=$(grep -no "${sample}," S_all_scaffold_stats.test.csv);
+
+sed -i "${line%%:*}{s/$/,${avg},${sort_dist_arr[0]},${sort_dist_arr[-1]}/}" S_all_scaffold_stats.test.csv;
+
+rm test*
+done
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
