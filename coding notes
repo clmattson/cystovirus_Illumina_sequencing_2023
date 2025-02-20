@@ -574,10 +574,57 @@ for file in *_norm3_meta_spades_output/*_norm3_meta_spades_M_scaffolds.fasta;
 done
 
 
-
-
-
 #######################################################################################
+
+
+
+
+#ok the above code became filter_scaffolds.sh in new file. 
+
+#kinda doesnt seem like normalizing is improving the outout. 
+#lets try one more time with high depth:
+
+#re-do, even higher
+for pair in final_trimmed_fastqs/*_SXX_L001_001.R1.qhtrim.unmapped.sorted2.fastq;  
+do file=$(basename $pair);  sample_temp=${file%%_*};  
+sample=$(basename $sample_temp);  
+bbnorm.sh tgt=500 max=520 in=final_trimmed_fastqs/${sample}_SXX_L001_001.R1.qhtrim.unmapped.sorted2.fastq in2=final_trimmed_fastqs/${sample}_SXX_L001_001.R2.qhtrim.unmapped.sorted2.fastq out=normalized4_trimmed_reads/${sample}_SXX_L001_001.R1.qhtrim.unmapped.sorted2.bbnorm4.fastq out2=normalized4_trimmed_reads/${sample}_SXX_L001_001.R2.qhtrim.unmapped.sorted2.bbnorm4.fastq hist=normalized3_trimmed_reads/${sample}_bbnorm4_histogram_out;  
+done
+
+#re-do meta spades run (with new tmux sess too):
+for pair in normalized4_trimmed_reads/*_SXX_L001_001.R1.qhtrim.unmapped.sorted2.bbnorm4.fastq; 
+do file=$(basename $pair); 
+sample_temp=${file%%_*}; 
+sample=$(basename $sample_temp); 
+spades.py --meta --pe1-1 normalized4_trimmed_reads/${sample}_SXX_L001_001.R1.qhtrim.unmapped.sorted2.bbnorm4.fastq --pe1-2 normalized4_trimmed_reads/${sample}_SXX_L001_001.R2.qhtrim.unmapped.sorted2.bbnorm4.fastq -o spades/norm4_meta/${sample}_norm4_meta_spades_output;
+done
+
+for direct in *_norm4_meta_spades_output; 
+do file=$(basename $direct); 
+sample=${file##*/}
+sample=${file%%_*}; 
+mv ${sample}_norm4_meta_spades_output/contigs.fasta ${sample}_norm4_meta_spades_output/${sample}_norm4_meta_spades_contigs.fasta;
+mv ${sample}_norm4_meta_spades_output/scaffolds.fasta ${sample}_norm4_meta_spades_output/${sample}_norm4_meta_spades_scaffolds.fasta;
+done
+
+#base spades with  normalized 4 reads
+for pair in normalized4_trimmed_reads/*_SXX_L001_001.R1.qhtrim.unmapped.sorted2.bbnorm4.fastq; 
+do file=$(basename $pair); 
+sample_temp=${file%%_*}; 
+sample=$(basename $sample_temp); 
+spades.py --pe1-1 normalized4_trimmed_reads/${sample}_SXX_L001_001.R1.qhtrim.unmapped.sorted2.bbnorm4.fastq --pe1-2 normalized4_trimmed_reads/${sample}_SXX_L001_001.R2.qhtrim.unmapped.sorted2.bbnorm4.fastq -o spades/norm4_base/${sample}_norm4_base_spades_output;
+done
+
+for direct in *_norm4_base_spades_output; 
+do file=$(basename $direct); 
+sample=${file##*/}
+sample=${file%%_*}; 
+mv ${sample}_norm4_base_spades_output/contigs.fasta ${sample}_norm4_base_spades_output/${sample}_norm4_base_spades_contigs.fasta;
+mv ${sample}_norm4_base_spades_output/scaffolds.fasta ${sample}_norm4_base_spades_output/${sample}_norm4_base_spades_scaffolds.fasta;
+done
+
+
+
 
 
 #okay and also do base spades
