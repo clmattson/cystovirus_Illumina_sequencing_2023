@@ -599,6 +599,7 @@ sample=$(basename $sample_temp);
 spades.py --meta --pe1-1 normalized4_trimmed_reads/${sample}_SXX_L001_001.R1.qhtrim.unmapped.sorted2.bbnorm4.fastq --pe1-2 normalized4_trimmed_reads/${sample}_SXX_L001_001.R2.qhtrim.unmapped.sorted2.bbnorm4.fastq -o spades/norm4_meta/${sample}_norm4_meta_spades_output;
 done
 
+
 for direct in *_norm4_meta_spades_output; 
 do file=$(basename $direct); 
 sample=${file##*/}
@@ -622,6 +623,55 @@ sample=${file%%_*};
 mv ${sample}_norm4_base_spades_output/contigs.fasta ${sample}_norm4_base_spades_output/${sample}_norm4_base_spades_contigs.fasta;
 mv ${sample}_norm4_base_spades_output/scaffolds.fasta ${sample}_norm4_base_spades_output/${sample}_norm4_base_spades_scaffolds.fasta;
 done
+
+
+
+
+
+#re-do normalization with 'fix_spikes', even higher
+for pair in final_trimmed_fastqs/*_SXX_L001_001.R1.qhtrim.unmapped.sorted2.fastq;  
+do file=$(basename $pair);  sample_temp=${file%%_*};  
+sample=$(basename $sample_temp);  
+bbnorm.sh fixspikes=f tgt=400 max=450 in=final_trimmed_fastqs/${sample}_SXX_L001_001.R1.qhtrim.unmapped.sorted2.fastq in2=final_trimmed_fastqs/${sample}_SXX_L001_001.R2.qhtrim.unmapped.sorted2.fastq out=normalized_fixspikes_trimmed_reads/${sample}_SXX_L001_001.R1.qhtrim.unmapped.sorted2.bbnormFS.fastq out2=normalized_fixspikes_trimmed_reads/${sample}_SXX_L001_001.R2.qhtrim.unmapped.sorted2.bbnormFS.fastq hist=normalized3_trimmed_reads/${sample}_bbnormFS_histogram_out;  
+done
+
+#re-do meta spades run (with new tmux sess too):
+for pair in normalized_fixspikes_trimmed_reads/*_SXX_L001_001.R1.qhtrim.unmapped.sorted2.bbnormFS.fastq; 
+do file=$(basename $pair); 
+sample_temp=${file%%_*}; 
+sample=$(basename $sample_temp); 
+spades.py --meta --pe1-1 normalized_fixspikes_trimmed_reads/${sample}_SXX_L001_001.R1.qhtrim.unmapped.sorted2.bbnormFS.fastq --pe1-2 normalized_fixspikes_trimmed_reads/${sample}_SXX_L001_001.R2.qhtrim.unmapped.sorted2.bbnormFS.fastq -o spades/normFS_meta/${sample}_normFS_meta_spades_output;
+done
+
+
+for direct in *_normFS_meta_spades_output; 
+do file=$(basename $direct); 
+sample=${file##*/}
+sample=${file%%_*}; 
+mv ${sample}_normFS_meta_spades_output/contigs.fasta ${sample}_normFS_meta_spades_output/${sample}_normFS_meta_spades_contigs.fasta;
+mv ${sample}_normFS_meta_spades_output/scaffolds.fasta ${sample}_normFS_meta_spades_output/${sample}_normFS_meta_spades_scaffolds.fasta;
+done
+
+
+
+
+
+
+
+
+#no normalizing, --isolate spades????? ugh.
+
+for pair in final_trimmed_fastqs/*_SXX_L001_001.R1.qhtrim.unmapped.sorted2.fastq; 
+do file=$(basename $pair); 
+sample_temp=${file%%_*}; 
+sample=$(basename $sample_temp); 
+spades.py --isolate --pe1-1 final_trimmed_fastqs/${sample}_SXX_L001_001.R1.qhtrim.unmapped.sorted2.fastq --pe1-2 final_trimmed_fastqs/${sample}_SXX_L001_001.R2.qhtrim.unmapped.sorted2.fastq -o spades/isolate/${sample}_isolate_spades_output;
+done
+
+
+
+
+
 
 
 
