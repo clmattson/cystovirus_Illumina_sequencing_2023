@@ -586,3 +586,90 @@ sample=$(basename $sample_temp);
 spades.py --pe1-1 final_trimmed_fastqs/${sample}_SXX_L001_001.R1.qhtrim.unmapped.sorted2.fastq --pe1-2 final_trimmed_fastqs/${sample}_SXX_L001_001.R2.qhtrim.unmapped.sorted2.fastq -o spades/base/${sample}_base_spades_output;
 done
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+#filter scaffolds by spades k-mer coverage, "cov" in fasta header
+
+#remove line breaks from scaffold files
+for dir in *_rnaviral_spades_output;   
+do sample="${dir:0:1}"; 
+sed -i ':a;N;/>/!s/\n//;ta;P;D' ${dir}/${sample}_scaffolds.fasta; 
+done
+
+
+#get only high cov fastas
+for dir in *_rnaviral_spades_output;   
+do sample="${dir:0:1}"; 
+#make array of all cov values for current dir/assembly
+covs_array=();
+readarray covs_array < <(grep -oP '(?<=cov_)[0-9]+' ${dir}/${sample}_scaffolds.fasta"");  
+#initialize empty directory to store big cov values
+gt_values=();  
+for value in "${covs_array[@]}"; 
+  do echo "cov value =" "${value}"
+  if [[ ${value} -gt 1000 ]]; 
+    then echo "${sample} value is > 1000";
+  gt_values+=("${value}");  
+  fi; 
+done; 
+for gtv in "${gt_values[@]}";
+  do echo "gtv =" "${gtv}"
+  grep -A 1 ${gtv} ${dir}/${sample}_scaffolds.fasta >> ${sample}_highcov_scaffolds.fasta;
+done
+#echo "${gt_values[@]}"; 
+done
+
+#filter out only bam alignments to filtered contigs (above):
+#ok 
+#get list of contigs of interest (change headers to match whats in the bam files below):
+for list in *_blast_contiglist.txt;
+do sample_seg="${dir:0:3}";
+cut -c 3- ${list} > ${sample_seg}_blast_contiglist_trimmed.txt;
+done
+
+#filter out only bam alignments to filtered contigs:
+for list in *_blast_contiglist_trimmed.txt;
+do sample_seg="${list:0:3}";
+sample="${list:0:1}"
+cat ${sample_seg}_blast_contiglist_trimmed.txt | tr "\n" " " | xargs samtools view -bh ${sample}_RNAv_merged.sorted.bam > ${sample_seg}_RNAvFILT.merged.sorted.bam;
+done
+
+#generate depth files from bams:
+for list in *_blast_contiglist_trimmed.txt; do sample_seg="${list:0:3}"; sample="${list:0:1}"; echo -e "contig\tposition\tdepth" > ${sample_seg}_RNAvFILT.coverage; samtools depth ${sample_seg}_RNAvFILT.merged.sorted.bam >> ${sample_seg}_RNAvFILT.coverage; done
+
+
+
+#ok lets align assemblies by segment
+
+mafft-einsi --genafpair --adjustdirectionaccurately --maxiterate 1000 L_assemblies.fasta > L_assemblies_mafft.fasta
+
+
+
+
+
+
+
+#--isolate
+for pair in reads_to_phi6_ref/*_merged_sorted_1.fastq; 
+do file=$(basename $pair); 
+sample_temp=${file%%_*}; 
+sample=$(basename $sample_temp); 
+spades.py --rnaviral --pe1-1 reads_to_phi6_ref/${sample}_merged_sorted_1.fastq --pe1-2 reads_to_phi6_ref/${sample}_merged_sorted_2.fastq -o spades/isolate/${sample}_isolate_spades_output;
+done
+
+
+
+#to view
