@@ -319,7 +319,7 @@ for file in *${sample_suffix}_output/*${sample_suffix}_L_contigs.fasta;
   dist_arr=();
   sort_dist_arr=();
   sum=0;
-  for line in $(grep 'NODE' test.dst); 
+  for line in $(grep 'k141' test.dst); 
     do for word in $line; 
       do if (( $(echo "$word > 0" |bc -l) )); then
         echo $word;
@@ -353,7 +353,7 @@ for file in *${sample_suffix}_output/*${sample_suffix}_M_contigs.fasta;
   dist_arr=();
   sort_dist_arr=();
   sum=0;
-  for line in $(grep 'NODE' test.dst); 
+  for line in $(grep 'k141' test.dst); 
     do for word in $line; 
       do if (( $(echo "$word > 0" |bc -l) )); then
         echo $word;
@@ -385,7 +385,7 @@ for file in *${sample_suffix}_output/*${sample_suffix}_S_contigs.fasta;
   dist_arr=();
   sort_dist_arr=();
   sum=0;
-  for line in $(grep 'NODE' test.dst); 
+  for line in $(grep 'k141' test.dst); 
     do for word in $line; 
       do if (( $(echo "$word > 0" |bc -l) )); then
         echo $word;
