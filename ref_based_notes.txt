@@ -105,10 +105,10 @@ samtools consensus -o ${sample}_consensus.fasta --min-depth 60 ${sample}_p6Saln.
 done
 
 
+#jan 21 2025 note: not sure why the above block says output "p6Saln" when its after the concatenated reference code. need to regenerate the phi6 S consensus to be certain itis correct
 
 
 
-#try regular spades and --meta spades
 
 -- 01/08/2025
 
