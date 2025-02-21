@@ -1,0 +1,588 @@
+#assembly
+#--metaviral
+
+
+spades.py --metaviral --pe1-1 final_trimmed_fastqs/${sample}_SXX_L001_001.R1.qhtrim.unmapped.sorted2.fastq --pe1-2 final_trimmed_fastqs/${sample}_SXX_L001_001.R2.qhtrim.unmapped.sorted2.fastq -o spades/metaviral/${sample}_metaviral_spades_output;
+done
+
+
+#--rnaviral ***** worked?
+for pair in final_trimmed_fastqs/*_L001_001.R1.qhtrim.unmapped.sorted2.fastq; 
+do file=$(basename $pair); 
+sample_temp=${file%%_L0*}; 
+sample=$(basename $sample_temp); 
+spades.py --rnaviral --pe1-1 final_trimmed_fastqs/${sample}_L001_001.R1.qhtrim.unmapped.sorted2.fastq --pe1-2 final_trimmed_fastqs/${sample}_L001_001.R2.qhtrim.unmapped.sorted2.fastq -o spades/rnaviral/${sample}_metaviral_spades_output;
+done
+
+#do the rest after command died:
+declare -a alph1=("C" "D" "E" "F" "G" "H" "I" "J")
+
+for sample in "${alph1[@]}";
+do spades.py --rnaviral --pe1-1 final_trimmed_fastqs/${sample}_SXX_L001_001.R1.qhtrim.unmapped.sorted2.fastq --pe1-2 final_trimmed_fastqs/${sample}_SXX_L001_001.R2.qhtrim.unmapped.sorted2.fastq -o spades/rnaviral/${sample}_metaviral_spades_output;
+done
+
+#rename the assembly files
+for dir in *_rnaviral_spades_output;  do sample="${dir:0:1}";  mv ${dir}/scaffolds.fasta ${dir}/${sample}_scaffolds.fasta;  done
+
+#used minimap to align the assemblies to the phi6 reference segments but honestly thhe alignments dont look great. below is the basic command i used from the internet:
+minimap2 -ax asm5 ref.fa asm.fa > aln.sam
+
+#do mafft instead
+#make giant file of all assemblies with phi6 S M and L at top
+cat phi6_L.fasta *_rnaviral_spades_output/*_scaffolds.fasta >> L_all_whole_scaffolds.fasta
+cat phi6_M.fasta *_rnaviral_spades_output/*_scaffolds.fasta >> M_all_whole_scaffolds.fasta
+cat phi6_S.fasta *_rnaviral_spades_output/*_scaffolds.fasta >> S_all_whole_scaffolds.fasta
+
+for dir in *_rnaviral_spades_output;
+do sample="${dir:0:1}"; 
+mafft-einsi --genafpair --adjustdirectionaccurately --maxiterate 1000 L_all_whole_scaffolds.fasta > L_all_whole_scaffolds.mafft.fasta
+
+
+
+
+
+#ok lets align reads to RNAv assemblies
+
+#build  db for each assembly
+
+for pair in ./fastqs/*_*R1*.fastq; 
+#get leading sample name letter only
+do sample_temp=${pair%%_*};
+sample=$(basename $sample_temp);
+bowtie2-build ./spades/rnaviral/${sample}_rnaviral_spades_output/${sample}_scaffolds.fasta ${sample}_rnaviral_spades_assembly_DB;
+done
+
+#align each set of reads to spades rna viral spades assembly
+for pair in ./fastqs/*_*R1*.fastq; 
+#get leading sample name letter only
+do sample_temp=${pair%%_*};
+sample=$(basename $sample_temp);
+bowtie2 -p 8 -x ${sample}_rnaviral_spades_assembly_DB -1 ./trimmed_fastqs/${sample}_SXX_L001_R1_001.qtrim.fastq  -2 ./trimmed_fastqs/${sample}_SXX_L001_R2_001.qtrim.fastq  -S ./reads_to_spadesRNAV_assemblies/${sample}_SXX_L001_001.qtrim.RNAv.sam;
+done
+
+#sam to bam
+
+for pair in *_SXX_L001_001.qtrim.RNAv.sam; 
+#get leading sample name letter only
+do sample_temp=${pair%%_*};
+sample=$(basename $sample_temp);
+samtools view -bS ${pair} > ${sample}_SXX_L001_001.qtrim.RNAv.bam;
+done
+
+#sort bam
+for pair in *_SXX_L001_001.qtrim.RNAv.bam; 
+#get leading sample name letter only
+do sample_temp=${pair%%_*};
+sample=$(basename $sample_temp);
+samtools sort -o ${sample}_SXX_L001_001.qtrim.RNAv.sorted.bam -T ./samtools_temp_dir4 --threads 24 ${pair};
+done
+
+for pair in *_SXX_L001_001.qtrim.RNAv.sorted.bam; 
+#get leading sample name letter only
+do sample_temp=${pair%%_*};
+sample=$(basename $sample_temp);
+samtools view -b -F 4 -f 8 ${pair} > ${sample}_SXX_L001_001.qhtrim.RNAv.sorted.mapped1.bam
+samtools view -b -F 8 -f 4 ${pair} > ${sample}_SXX_L001_001.qhtrim.RNAv.sorted.mapped2.bam
+samtools view -b -F 12 ${pair} > ${sample}_SXX_L001_001.qhtrim.RNAv.sorted.mapped_both.bam
+done
+
+
+for pair in *_SXX_L001_001.qtrim.RNAv.sorted.bam; 
+#get leading sample name letter only
+do sample_temp=${pair%%_*};
+sample=$(basename $sample_temp);
+samtools merge ${sample}_RNAv.merged.bam ${sample}_SXX_L001_001.qhtrim.RNAv.sorted.mapped1.bam ${sample}_SXX_L001_001.qhtrim.RNAv.sorted.mapped2.bam ${sample}_SXX_L001_001.qhtrim.RNAv.sorted.mapped_both.bam;
+done
+
+#sort again
+for pair in *_RNAv.merged.bam; 
+#get leading sample name letter only
+do sample_temp=${pair%%_*};
+sample=$(basename $sample_temp);
+samtools sort -o ${sample}_RNAv_merged.sorted.bam -T ./samtools_temp_dir5 --threads 24 ${pair};
+done
+
+for pair in *_RNAv_merged.sorted.bam; 
+#get leading sample name letter only
+do sample_temp=${pair%%_*};
+sample=$(basename $sample_temp);
+samtools fastq -@ 8 ${sample}_RNAv_merged.sorted.bam -1 ${sample}_RNAv_merged_sorted_1.fastq -2 ${sample}_RNAv_merged_sorted_2.fastq;
+done
+
+
+#to view read to ref alignments in tablet need to convert final bam to sam
+for pair in *_RNAv_merged.sorted.bam; 
+#get leading sample name letter only
+do sample_temp=${pair%%_*};
+sample=$(basename $sample_temp);
+samtools view -h -o ${sample}_RNAv_merged.sorted.sam ${sample}_RNAv_merged.sorted.bam;
+done
+
+
+
+OK maybe spades --rnaviral assumes something untrue about recombination or something. Idk, lets try a diff setting for assembly
+#maybe isolate spades?
+
+
+
+
+#Jan 2025 updates - try --meta spades instead? 
+
+#can speed up by adding more cores to the slurm (I used 6 instead of 1 and it took like a day instead of 3 days)
+
+for pair in final_trimmed_fastqs/*_SXX_L001_001.R1.qhtrim.unmapped.sorted2.fastq; 
+do file=$(basename $pair); 
+sample_temp=${file%%_*}; 
+sample=$(basename $sample_temp); 
+spades.py --meta --pe1-1 final_trimmed_fastqs/${sample}_SXX_L001_001.R1.qhtrim.unmapped.sorted2.fastq --pe1-2 final_trimmed_fastqs/${sample}_SXX_L001_001.R2.qhtrim.unmapped.sorted2.fastq -o spades/meta/${sample}_meta_spades_output;
+done
+
+
+#srun ran out of time before it completed all the samples (~48 hrs). Complete V W and X:
+
+#eclare -a arr=("V" "W" "X")
+
+#for sample in "${arr[@]}";
+#do spades.py --meta --pe1-1 final_trimmed_fastqs/${sample}_SXX_L001_001.R1.qhtrim.unmapped.sorted2.fastq --pe1-2 final_trimmed_fastqs/${sample}_SXX_L001_001.R2.qhtrim.unmapped.sorted2.fastq -o spades/meta/${sample}_meta_spades_output;
+#done
+
+
+#move contigs & scaffolds files to letter namees:
+
+for direct in *_meta_spades_output; 
+do file=$(basename $direct); 
+sample=${file##*/}
+sample=${file%%_*}; 
+mv ${sample}_meta_spades_output/contigs.fasta ${sample}_meta_spades_output/${sample}_meta_spades_contigs.fasta;
+mv ${sample}_meta_spades_output/scaffolds.fasta ${sample}_meta_spades_output/${sample}_meta_spades_scaffolds.fasta;
+done
+
+#check if major scaffolds and contigs are the same: 
+for i in  */*_*_*_*.fasta; do echo $i; grep '>' $i | head -6; echo;  done
+#okay looks like theyre really similar but not identical
+
+#blast scaffolds and align reads to them.
+
+#blasting, code adapted from the ONT code:
+
+#gets only sample letter from assembly folder name:
+for direct in *_meta_spades_output; 
+do file=$(basename $direct); 
+sample=${file##*/}
+sample=${file%%_*}; 
+#can add line here to remove contig header whitespace if necessary
+#blast the current assembly against phi6 M segment reference
+blastn -query ${sample}_meta_spades_output/${sample}_meta_spades_scaffolds.fasta -subject phi6_M.fasta -outfmt '6 delim=,' -qcov_hsp_perc 20 >  ${sample}_meta_spades_output/${sample}_meta_spades_scaffolds_M_blastout.csv;
+        blast_check="$(cat ${sample}_meta_spades_output/${sample}_meta_spades_scaffolds_M_blastout.csv)"
+        if [ -n "${blast_check}" ]; then
+                echo "${sample} ${blast_check} not empty"
+                #makes file with scaffold names only
+                awk -F"," '{print $1}' ${sample}_meta_spades_output/${sample}_meta_spades_scaffolds_M_blastout.csv > ${sample}_meta_spades_output/${sample}_meta_spades_scaffolds_M_blastout_names.txt;
+                cat ${sample}_meta_spades_output/${sample}_meta_spades_scaffolds_M_blastout_names.txt | awk '{gsub("_","\\_",$0);$0="(?s)^>"$0".*?(?=\\n(\\z|>))"}1' | pcregrep -oM -f - ${sample}_meta_spades_output/${sample}_meta_spades_scaffolds.fasta >> ${sample}_meta_spades_output/${sample}_meta_spades_M_scaffolds.fasta
+        fi;
+done
+
+#look at hits:
+for i in *_meta_spades_output/*M*scaffolds*.fasta;  do echo $i; grep '>' $i | head -6; echo; done
+
+
+#S ref blast: 
+for direct in *_meta_spades_output; 
+do file=$(basename $direct); 
+sample=${file##*/}
+sample=${file%%_*}; 
+#can add line here to remove contig header whitespace if necessary
+#blast the current assembly against phi6 M segment reference
+blastn -query ${sample}_meta_spades_output/${sample}_meta_spades_scaffolds.fasta -subject phi6_S.fasta -outfmt '6 delim=,' -qcov_hsp_perc 20 > ${sample}_meta_spades_output/${sample}_meta_spades_scaffolds_S_blastout.csv;
+        blast_check="$(cat ${sample}_meta_spades_output/${sample}_meta_spades_scaffolds_S_blastout.csv)"
+        if [ -n "${blast_check}" ]; then
+                echo "${sample} ${blast_check} not empty"
+                #makes file with scaffold names only
+                awk -F"," '{print $1}' ${sample}_meta_spades_output/${sample}_meta_spades_scaffolds_S_blastout.csv > ${sample}_meta_spades_output/${sample}_meta_spades_scaffolds_S_blastout_names.txt;
+                cat ${sample}_meta_spades_output/${sample}_meta_spades_scaffolds_S_blastout_names.txt | awk '{gsub("_","\\_",$0);$0="(?s)^>"$0".*?(?=\\n(\\z|>))"}1' | pcregrep -oM -f - ${sample}_meta_spades_output/${sample}_meta_spades_scaffolds.fasta >> ${sample}_meta_spades_output/${sample}_meta_spades_S_scaffolds.fasta
+        fi;
+done
+
+for i in *_meta_spades_output/*S*scaffolds*.fasta;  do echo $i; grep '>' $i | head -6; echo; done
+
+#L ref blast: 
+for direct in *_meta_spades_output; 
+do file=$(basename $direct); 
+sample=${file##*/}
+sample=${file%%_*}; 
+#can add line here to remove contig header whitespace if necessary
+#blast the current assembly against phi6 M segment reference
+blastn -query ${sample}_meta_spades_output/${sample}_meta_spades_scaffolds.fasta -subject phi6_L.fasta -outfmt '6 delim=,' -qcov_hsp_perc 20 > ${sample}_meta_spades_output/${sample}_meta_spades_scaffolds_L_blastout.csv;
+        blast_check="$(cat ${sample}_meta_spades_output/${sample}_meta_spades_scaffolds_L_blastout.csv)"
+        if [ -n "${blast_check}" ]; then
+                echo "${sample} ${blast_check} not empty"
+                #makes file with scaffold names only
+                awk -F"," '{print $1}' ${sample}_meta_spades_output/${sample}_meta_spades_scaffolds_L_blastout.csv > ${sample}_meta_spades_output/${sample}_meta_spades_scaffolds_L_blastout_names.txt;
+                cat ${sample}_meta_spades_output/${sample}_meta_spades_scaffolds_L_blastout_names.txt | awk '{gsub("_","\\_",$0);$0="(?s)^>"$0".*?(?=\\n(\\z|>))"}1' | pcregrep -oM -f - ${sample}_meta_spades_output/${sample}_meta_spades_scaffolds.fasta >> ${sample}_meta_spades_output/${sample}_meta_spades_L_scaffolds.fasta
+        fi;
+done
+
+for i in *_meta_spades_output/*L*scaffolds*.fasta;  do echo $i; grep '>' $i | head -6; echo; done
+
+
+#filter out low cov scaffolds
+#align reads to blast hits
+
+
+
+#print out only cov from fasta headers:
+for i in $(grep '>' A_meta_spadesfasta); do echo ${i##*_}; done
+
+#checklist:
+
+- scaffold length
+- scaffold cov 
+- reads align to scaffold? 
+- sample tot reads
+
+
+
+
+
+
+
+
+
+
+
+
+### okay go back and do read normalization before genome assembly!
+
+
+for pair in final_trimmed_fastqs/*_SXX_L001_001.R1.qhtrim.unmapped.sorted2.fastq;  
+do file=$(basename $pair);  sample_temp=${file%%_*};  
+sample=$(basename $sample_temp);  
+bbnorm.sh tgt=56 max=65 in=final_trimmed_fastqs/${sample}_SXX_L001_001.R1.qhtrim.unmapped.sorted2.fastq in2=final_trimmed_fastqs/${sample}_SXX_L001_001.R2.qhtrim.unmapped.sorted2.fastq out=normalized_trimmed_reads/${sample}_SXX_L001_001.R1.qhtrim.unmapped.sorted2.bbnorm.fastq out2=normalized_trimmed_reads/${sample}_SXX_L001_001.R2.qhtrim.unmapped.sorted2.bbnorm.fastq hist=normalized_trimmed_reads/${sample}_bbnorm_histogram_out;  
+done
+
+#now retry meta spades and base spades after normalizing
+
+
+#first make a tmux session and do more cores (6) in the slurm command
+ srun -c 6 -t 30:00:00 --mem=20000 --pty /bin/bash
+
+#meta spades run:
+for pair in normalized_trimmed_reads/*_SXX_L001_001.R1.qhtrim.unmapped.sorted2.bbnorm.fastq; 
+do file=$(basename $pair); 
+sample_temp=${file%%_*}; 
+sample=$(basename $sample_temp); 
+spades.py --meta --pe1-1 normalized_trimmed_reads/${sample}_SXX_L001_001.R1.qhtrim.unmapped.sorted2.bbnorm.fastq --pe1-2 normalized_trimmed_reads/${sample}_SXX_L001_001.R2.qhtrim.unmapped.sorted2.bbnorm.fastq -o spades/norm_meta/${sample}_norm_meta_spades_output;
+done
+
+
+#regular spades run:
+#(didnt do yet)..
+
+for pair in normalized_trimmed_reads/*_SXX_L001_001.R1.qhtrim.unmapped.sorted2.bbnorm.fastq; 
+do file=$(basename $pair); 
+sample_temp=${file%%_*}; 
+sample=$(basename $sample_temp); 
+spades.py --pe1-1 normalized_trimmed_reads/${sample}_SXX_L001_001.R1.qhtrim.unmapped.sorted2.bbnorm.fastq --pe1-2 normalized_trimmed_reads/${sample}_SXX_L001_001.R2.qhtrim.unmapped.sorted2.bbnorm.fastq -o spades/norm_base/${sample}_norm_base_spades_output;
+done
+
+
+#hmm doesnt look good. lets up the target coverage for bbnorm: 
+
+for pair in final_trimmed_fastqs/*_SXX_L001_001.R1.qhtrim.unmapped.sorted2.fastq;  
+do file=$(basename $pair);  sample_temp=${file%%_*};  
+sample=$(basename $sample_temp);  
+bbnorm.sh tgt=225 max=250 in=final_trimmed_fastqs/${sample}_SXX_L001_001.R1.qhtrim.unmapped.sorted2.fastq in2=final_trimmed_fastqs/${sample}_SXX_L001_001.R2.qhtrim.unmapped.sorted2.fastq out=normalized2_trimmed_reads/${sample}_SXX_L001_001.R1.qhtrim.unmapped.sorted2.bbnorm2.fastq out2=normalized2_trimmed_reads/${sample}_SXX_L001_001.R2.qhtrim.unmapped.sorted2.bbnorm2.fastq hist=normalized2_trimmed_reads/${sample}_bbnorm2_histogram_out;  
+done
+
+#re-do meta spades run (with new tmux sess too):
+for pair in normalized_trimmed_reads/*_SXX_L001_001.R1.qhtrim.unmapped.sorted2.bbnorm.fastq; 
+do file=$(basename $pair); 
+sample_temp=${file%%_*}; 
+sample=$(basename $sample_temp); 
+spades.py --meta --pe1-1 normalized2_trimmed_reads/${sample}_SXX_L001_001.R1.qhtrim.unmapped.sorted2.bbnorm2.fastq --pe1-2 normalized2_trimmed_reads/${sample}_SXX_L001_001.R2.qhtrim.unmapped.sorted2.bbnorm2.fastq -o spades/norm2_meta/${sample}_norm2_meta_spades_output;
+done
+
+
+
+
+#re-do, even higher
+for pair in final_trimmed_fastqs/*_SXX_L001_001.R1.qhtrim.unmapped.sorted2.fastq;  
+do file=$(basename $pair);  sample_temp=${file%%_*};  
+sample=$(basename $sample_temp);  
+bbnorm.sh tgt=325 max=350 in=final_trimmed_fastqs/${sample}_SXX_L001_001.R1.qhtrim.unmapped.sorted2.fastq in2=final_trimmed_fastqs/${sample}_SXX_L001_001.R2.qhtrim.unmapped.sorted2.fastq out=normalized3_trimmed_reads/${sample}_SXX_L001_001.R1.qhtrim.unmapped.sorted2.bbnorm3.fastq out2=normalized3_trimmed_reads/${sample}_SXX_L001_001.R2.qhtrim.unmapped.sorted2.bbnorm3.fastq hist=normalized3_trimmed_reads/${sample}_bbnorm3_histogram_out;  
+done
+
+#re-do meta spades run (with new tmux sess too):
+for pair in normalized_trimmed_reads/*_SXX_L001_001.R1.qhtrim.unmapped.sorted2.bbnorm.fastq; 
+do file=$(basename $pair); 
+sample_temp=${file%%_*}; 
+sample=$(basename $sample_temp); 
+spades.py --meta --pe1-1 normalized3_trimmed_reads/${sample}_SXX_L001_001.R1.qhtrim.unmapped.sorted2.bbnorm3.fastq --pe1-2 normalized3_trimmed_reads/${sample}_SXX_L001_001.R2.qhtrim.unmapped.sorted2.bbnorm3.fastq -o spades/norm3_meta/${sample}_norm3_meta_spades_output;
+done
+
+for direct in *_norm3_meta_spades_output; 
+do file=$(basename $direct); 
+sample=${file##*/}
+sample=${file%%_*}; 
+mv ${sample}_norm3_meta_spades_output/contigs.fasta ${sample}_norm3_meta_spades_output/${sample}_norm3_meta_spades_contigs.fasta;
+mv ${sample}_norm3_meta_spades_output/scaffolds.fasta ${sample}_norm3_meta_spades_output/${sample}_norm3_meta_spades_scaffolds.fasta;
+done
+
+
+for direct in *_norm3_meta_spades_output; 
+do file=$(basename $direct); 
+sample=${file##*/}
+sample=${file%%_*}; 
+#can add line here to remove contig header whitespace if necessary
+#blast the current assembly against phi6 M segment reference
+blastn -query ${sample}_norm3_meta_spades_output/${sample}_norm3_meta_spades_scaffolds.fasta -subject phi6_M.fasta -outfmt '6 delim=,' -qcov_hsp_perc 20 >  ${sample}_norm3_meta_spades_output/${sample}_norm3_meta_spades_scaffolds_M_blastout.csv;
+        blast_check="$(cat ${sample}_norm3_meta_spades_output/${sample}_norm3_meta_spades_scaffolds_M_blastout.csv)"
+        if [ -n "${blast_check}" ]; then
+                echo "${sample} ${blast_check} not empty"
+                #makes file with scaffold names only
+                awk -F"," '{print $1}' ${sample}_norm3_meta_spades_output/${sample}_norm3_meta_spades_scaffolds_M_blastout.csv > ${sample}_norm3_meta_spades_output/${sample}_norm3_meta_spades_scaffolds_M_blastout_names.txt;
+                cat ${sample}_norm3_meta_spades_output/${sample}_norm3_meta_spades_scaffolds_M_blastout_names.txt | awk '{gsub("_","\\_",$0);$0="(?s)^>"$0".*?(?=\\n(\\z|>))"}1' | pcregrep -oM -f - ${sample}_norm3_meta_spades_output/${sample}_norm3_meta_spades_scaffolds.fasta >> ${sample}_norm3_meta_spades_output/${sample}_norm3_meta_spades_M_scaffolds.fasta
+        fi;
+done
+
+
+
+#filter out reads that are lower than 20% of the max kmer coverage
+
+
+#get covereage numbers: 
+for file in *_norm3_meta_spades_output/*_norm3_meta_spades_M_scaffolds.fasta; 
+  do cov_list=();
+  len_list=();
+  #get filename
+  fileonly=$(basename $file); 
+  #get sample letter from file name:
+  #sample=${fileonly##*/};
+  sample=${fileonly%%_*};
+  echo "sample,num scaffolds,max length,min length,max cov,min cov" > M_all_sample_scaffold_info.csv
+  echo "finding scaffolds with kmer cov > 30% of max for sample ${sample}";
+  #loop thru the scaffold headers in the current sample scaffold file:
+  for scaff in $(grep '>' $file); 
+
+    #extract coverage value (as string)
+    do cov=${scaff##*_};
+    #add kmer ov value to list
+    cov_list+=("${cov}");
+    #sort the list based on numerical value, largest to smallest
+    sorted_cov_list=(`printf '%s\n' "${cov_list[@]}" | sort -gr`); 
+
+    #extract length value (as string)
+    len=${scaff##*length_};
+    len=${len%%_*};
+    #add kmer ov value to list
+    len_list+=("${len}");
+    #sort the list based on numerical value, largest to smallest
+    sorted_len_list=(`printf '%s\n' "${len_list[@]}" | sort -gr`); 
+
+  done;
+  #calculate a % of the max cov value:
+  thirty_perc_cov=$(echo "${sorted_cov_list[0]} * 0.3" | bc);
+  echo "30% of max cov = $thirty_perc_cov";
+  filtered_cov_values=();
+
+  #calculate %of the max length value:
+  twenty_perc_len=$(echo "${sorted_len_list[0]} * 0.2" | bc);
+  echo "20% of max len = $twenty_perc_len";
+  filtered_len_values=();
+
+  #loop thru the list of sorted coverage values to get values over the cutoff determined above:
+  for cov_value in "${sorted_cov_list[@]}"; do
+    #test if current value is bigger than the cutoff
+    if (( $(echo "$cov_value > $thirty_perc_cov" |bc -l) || $(echo "$cov_value > 300" |bc -l) )); then
+      #if true then add the cov_value to a list called filtered_cov_values
+      filtered_cov_values+=("$cov_value");
+      #grep the current true value in the fasta to get full header name and add it to a txt:
+      grep ${cov_value} $file >> ${sample}_norm3_meta_spades_output/${fileonly}_covfilt_names.txt;
+    fi;
+  done;
+  #after going thru whole file, add the sequences baseed on the filtered headers to new fasta called ..covfilt...fasta
+  awk 'BEGIN{FS="\n";RS=">";ORS=""} (NR==FNR)&&(NR>1){headers[$1];next} ($1 in headers){print ">" $0}' ${sample}_norm3_meta_spades_output/${fileonly}_covfilt_names.txt ${sample}_norm3_meta_spades_output/${sample}_norm3_meta_spades_M_scaffolds.fasta >> ${sample}_norm3_meta_spades_output/${sample}_norm3_meta_spades_M_covfilt_scaffolds.fasta;
+  echo "kcov values above 30% or 300 = ${filtered_cov_values[@]}";
+  echo "${sample},${filtered_len_values[0]},min length,${filtered_cov_values[0]},min cov" > M_all_sample_scaffold_info.csv
+  echo;
+done
+
+
+#to do: 
+okay get it to output a table, per segment (s/m/l)
+headers: # scaffolds, max length, min length, max cov, min cov
+rows = sample (aka letter)
+################################################################################################
+
+#print output to file with the following headers: 
+echo "sample,num scaffolds,max scaffold length,min scaffold length,max kmer coverage,min kmer coverage" > M_all_scaffold_stats.csv
+
+for file in *_norm3_meta_spades_output/*_norm3_meta_spades_M_scaffolds.fasta; 
+  do cov_list=();
+  len_list=();
+  #get filename
+  fileonly=$(basename $file); 
+  #get sample letter from file name:
+  #sample=${fileonly##*/};
+  sample=${fileonly%%_*};
+  echo "finding scaffolds with kmer cov > 30% of max for sample ${sample}";
+  #loop thru the scaffold headers in the current sample scaffold file:
+  for scaff in $(grep '>' $file); 
+    #extract coverage value (as string)
+    do cov=${scaff##*_};
+    echo "current scaffold = ${scaff}"
+    #add kmer ov value to list
+    if (( $(echo "$cov > 15" |bc -l) )); then
+      cov_list+=("${cov}");
+    fi;
+    #sort the list based on numerical value, largest to smallest
+    sorted_cov_list=(`printf '%s\n' "${cov_list[@]}" | sort -gr`); 
+
+    #extract length value (as string)
+    len=${scaff##*length_};
+    len=${len%%_*};
+    #add kmer ov value to list
+    len_list+=("${len}");
+    #sort the list based on numerical value, largest to smallest
+    sorted_len_list=(`printf '%s\n' "${len_list[@]}" | sort -gr`); 
+    #echo "len values = ${sorted_len_list[@]} for $sample";
+
+  done;
+  #calculate a % of the max cov value:
+  thirty_perc_cov=$(echo "${sorted_cov_list[0]} * 0.3" | bc);
+  echo "30% of max cov = $thirty_perc_cov";
+  filtered_cov_values=();
+
+  #calculate %of the max length value:
+  twenty_perc_len=$(echo "${sorted_len_list[0]} * 0.2" | bc);
+  echo "20% of max len = $twenty_perc_len";
+  filtered_len_values=();
+
+  for i in $(seq 0 $( echo "$(grep -c '>' $file)" | bc)); 
+    do if ( (( $(echo "${cov_list[i]} > $thirty_perc_cov" |bc -l) )) || (( $(echo "${cov_list[i]} > 300" |bc -l) )) ) && ( (( $(echo "${len_list[i]} > $twenty_perc_len" |bc -l) )) || (( $(echo "${len_list[i]} > 800" |bc -l) )) ); then
+      filtered_cov_values+=("${cov_list[i]}");
+      filtered_len_values+=("${len_list[i]}");
+      grep ${cov_list[i]} $file >> ${sample}_norm3_meta_spades_output/${fileonly}_covlenfilt_names.txt;
+    fi;
+  done;
+  #after going thru whole file, add the sequences baseed on the filtered headers to new fasta called ..covfilt...fasta
+  awk 'BEGIN{FS="\n";RS=">";ORS=""} (NR==FNR)&&(NR>1){headers[$1];next} ($1 in headers){print ">" $0}' ${sample}_norm3_meta_spades_output/${fileonly}_covlenfilt_names.txt ${sample}_norm3_meta_spades_output/${sample}_norm3_meta_spades_M_scaffolds.fasta >> ${sample}_norm3_meta_spades_output/${sample}_norm3_meta_spades_M_covlenfilt_scaffolds.fasta;
+  echo "kcov values above 30% or 300 = ${filtered_cov_values[@]} + length values above 20% or 800 = ${filtered_len_values[@]}";
+  echo;
+  echo "${sample},$(grep -c '>' ${sample}_norm3_meta_spades_output/${sample}_norm3_meta_spades_M_covlenfilt_scaffolds.fasta),${filtered_len_values[0]},${filtered_len_values[-1]},${filtered_cov_values[0]},${filtered_cov_values[-1]}" >> M_all_scaffold_stats.csv;
+done
+
+
+#######################################################################################
+
+
+
+
+#ok the above code became filter_scaffolds.sh in new file. 
+
+#kinda doesnt seem like normalizing is improving the outout. 
+#lets try one more time with high depth:
+
+#re-do, even higher
+for pair in final_trimmed_fastqs/*_SXX_L001_001.R1.qhtrim.unmapped.sorted2.fastq;  
+do file=$(basename $pair);  sample_temp=${file%%_*};  
+sample=$(basename $sample_temp);  
+bbnorm.sh tgt=500 max=520 in=final_trimmed_fastqs/${sample}_SXX_L001_001.R1.qhtrim.unmapped.sorted2.fastq in2=final_trimmed_fastqs/${sample}_SXX_L001_001.R2.qhtrim.unmapped.sorted2.fastq out=normalized4_trimmed_reads/${sample}_SXX_L001_001.R1.qhtrim.unmapped.sorted2.bbnorm4.fastq out2=normalized4_trimmed_reads/${sample}_SXX_L001_001.R2.qhtrim.unmapped.sorted2.bbnorm4.fastq hist=normalized3_trimmed_reads/${sample}_bbnorm4_histogram_out;  
+done
+
+#re-do meta spades run (with new tmux sess too):
+for pair in normalized4_trimmed_reads/*_SXX_L001_001.R1.qhtrim.unmapped.sorted2.bbnorm4.fastq; 
+do file=$(basename $pair); 
+sample_temp=${file%%_*}; 
+sample=$(basename $sample_temp); 
+spades.py --meta --pe1-1 normalized4_trimmed_reads/${sample}_SXX_L001_001.R1.qhtrim.unmapped.sorted2.bbnorm4.fastq --pe1-2 normalized4_trimmed_reads/${sample}_SXX_L001_001.R2.qhtrim.unmapped.sorted2.bbnorm4.fastq -o spades/norm4_meta/${sample}_norm4_meta_spades_output;
+done
+
+
+for direct in *_norm4_meta_spades_output; 
+do file=$(basename $direct); 
+sample=${file##*/}
+sample=${file%%_*}; 
+mv ${sample}_norm4_meta_spades_output/contigs.fasta ${sample}_norm4_meta_spades_output/${sample}_norm4_meta_spades_contigs.fasta;
+mv ${sample}_norm4_meta_spades_output/scaffolds.fasta ${sample}_norm4_meta_spades_output/${sample}_norm4_meta_spades_scaffolds.fasta;
+done
+
+#base spades with  normalized 4 reads
+for pair in normalized4_trimmed_reads/*_SXX_L001_001.R1.qhtrim.unmapped.sorted2.bbnorm4.fastq; 
+do file=$(basename $pair); 
+sample_temp=${file%%_*}; 
+sample=$(basename $sample_temp); 
+spades.py --pe1-1 normalized4_trimmed_reads/${sample}_SXX_L001_001.R1.qhtrim.unmapped.sorted2.bbnorm4.fastq --pe1-2 normalized4_trimmed_reads/${sample}_SXX_L001_001.R2.qhtrim.unmapped.sorted2.bbnorm4.fastq -o spades/norm4_base/${sample}_norm4_base_spades_output;
+done
+
+for direct in *_norm4_base_spades_output; 
+do file=$(basename $direct); 
+sample=${file##*/}
+sample=${file%%_*}; 
+mv ${sample}_norm4_base_spades_output/contigs.fasta ${sample}_norm4_base_spades_output/${sample}_norm4_base_spades_contigs.fasta;
+mv ${sample}_norm4_base_spades_output/scaffolds.fasta ${sample}_norm4_base_spades_output/${sample}_norm4_base_spades_scaffolds.fasta;
+done
+
+
+
+
+
+#re-do normalization with 'fix_spikes', even higher
+for pair in final_trimmed_fastqs/*_SXX_L001_001.R1.qhtrim.unmapped.sorted2.fastq;  
+do file=$(basename $pair);  sample_temp=${file%%_*};  
+sample=$(basename $sample_temp);  
+bbnorm.sh fixspikes=f tgt=400 max=450 in=final_trimmed_fastqs/${sample}_SXX_L001_001.R1.qhtrim.unmapped.sorted2.fastq in2=final_trimmed_fastqs/${sample}_SXX_L001_001.R2.qhtrim.unmapped.sorted2.fastq out=normalized_fixspikes_trimmed_reads/${sample}_SXX_L001_001.R1.qhtrim.unmapped.sorted2.bbnormFS.fastq out2=normalized_fixspikes_trimmed_reads/${sample}_SXX_L001_001.R2.qhtrim.unmapped.sorted2.bbnormFS.fastq hist=normalized3_trimmed_reads/${sample}_bbnormFS_histogram_out;  
+done
+
+#re-do meta spades run (with new tmux sess too):
+for pair in normalized_fixspikes_trimmed_reads/*_SXX_L001_001.R1.qhtrim.unmapped.sorted2.bbnormFS.fastq; 
+do file=$(basename $pair); 
+sample_temp=${file%%_*}; 
+sample=$(basename $sample_temp); 
+spades.py --meta --pe1-1 normalized_fixspikes_trimmed_reads/${sample}_SXX_L001_001.R1.qhtrim.unmapped.sorted2.bbnormFS.fastq --pe1-2 normalized_fixspikes_trimmed_reads/${sample}_SXX_L001_001.R2.qhtrim.unmapped.sorted2.bbnormFS.fastq -o spades/normFS_meta/${sample}_normFS_meta_spades_output;
+done
+
+
+for direct in *_normFS_meta_spades_output; 
+do file=$(basename $direct); 
+sample=${file##*/}
+sample=${file%%_*}; 
+mv ${sample}_normFS_meta_spades_output/contigs.fasta ${sample}_normFS_meta_spades_output/${sample}_normFS_meta_spades_contigs.fasta;
+mv ${sample}_normFS_meta_spades_output/scaffolds.fasta ${sample}_normFS_meta_spades_output/${sample}_normFS_meta_spades_scaffolds.fasta;
+done
+
+
+
+
+
+
+
+
+#no normalizing, --isolate spades????? ugh.
+
+for pair in final_trimmed_fastqs/*_SXX_L001_001.R1.qhtrim.unmapped.sorted2.fastq; 
+do file=$(basename $pair); 
+sample_temp=${file%%_*}; 
+sample=$(basename $sample_temp); 
+spades.py --isolate --pe1-1 final_trimmed_fastqs/${sample}_SXX_L001_001.R1.qhtrim.unmapped.sorted2.fastq --pe1-2 final_trimmed_fastqs/${sample}_SXX_L001_001.R2.qhtrim.unmapped.sorted2.fastq -o spades/isolate/${sample}_isolate_spades_output;
+done
+
+
+
+
+
+
+
+
+
+
+#okay and also do base spades
+
+
+for pair in final_trimmed_fastqs/*_SXX_L001_001.R1.qhtrim.unmapped.sorted2.fastq; 
+do file=$(basename $pair); 
+sample_temp=${file%%_*}; 
+sample=$(basename $sample_temp); 
+spades.py --pe1-1 final_trimmed_fastqs/${sample}_SXX_L001_001.R1.qhtrim.unmapped.sorted2.fastq --pe1-2 final_trimmed_fastqs/${sample}_SXX_L001_001.R2.qhtrim.unmapped.sorted2.fastq -o spades/base/${sample}_base_spades_output;
+done
+
