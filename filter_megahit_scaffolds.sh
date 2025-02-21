@@ -2,7 +2,7 @@
 
 #to do:
 #run script on non-normalized data. maybe switch output to like less long format version?  
-#get pariwaise alignment %s for filtered scaffold files and add to info table. 
+#get pariwaise alignment %s for filtered contig files and add to info table. 
 
 
 #get input:
@@ -53,13 +53,13 @@ sample=${file##*/}
 sample=${file%%_*}; 
 #can add line here to remove contig header whitespace if necessary
 #blast the current assembly against phi6 M segment reference
-blastn -query ${sample}${sample_suffix}_output/${sample}${sample_suffix}_scaffolds.fasta -subject phi6_S.fasta -outfmt '6 delim=,' -qcov_hsp_perc 20 >  ${sample}${sample_suffix}_output/${sample}${sample_suffix}_scaffolds_S_blastout.csv;
-        blast_check="$(cat ${sample}${sample_suffix}_output/${sample}${sample_suffix}_scaffolds_S_blastout.csv)"
+blastn -query ${sample}${sample_suffix}_output/${sample}${sample_suffix}_contigs.fasta -subject phi6_S.fasta -outfmt '6 delim=,' -qcov_hsp_perc 20 >  ${sample}${sample_suffix}_output/${sample}${sample_suffix}_contigs_S_blastout.csv;
+        blast_check="$(cat ${sample}${sample_suffix}_output/${sample}${sample_suffix}_contigs_S_blastout.csv)"
         if [ -n "${blast_check}" ]; then
                 echo "${sample} ${blast_check} not empty"
-                #makes file with scaffold names only
-                awk -F"," '{print $1}' ${sample}${sample_suffix}_output/${sample}${sample_suffix}_scaffolds_S_blastout.csv > ${sample}${sample_suffix}_output/${sample}${sample_suffix}_scaffolds_S_blastout_names.txt;
-                cat ${sample}${sample_suffix}_output/${sample}${sample_suffix}_scaffolds_S_blastout_names.txt | awk '{gsub("_","\\_",$0);$0="(?s)^>"$0".*?(?=\\n(\\z|>))"}1' | pcregrep -oM -f - ${sample}${sample_suffix}_output/${sample}${sample_suffix}_scaffolds.fasta >> ${sample}${sample_suffix}_output/${sample}${sample_suffix}_S_scaffolds.fasta
+                #makes file with contig names only
+                awk -F"," '{print $1}' ${sample}${sample_suffix}_output/${sample}${sample_suffix}_contigs_S_blastout.csv > ${sample}${sample_suffix}_output/${sample}${sample_suffix}_contigs_S_blastout_names.txt;
+                cat ${sample}${sample_suffix}_output/${sample}${sample_suffix}_contigs_S_blastout_names.txt | awk '{gsub("_","\\_",$0);$0="(?s)^>"$0".*?(?=\\n(\\z|>))"}1' | pcregrep -oM -f - ${sample}${sample_suffix}_output/${sample}${sample_suffix}_contigs.fasta >> ${sample}${sample_suffix}_output/${sample}${sample_suffix}_S_contigs.fasta
         fi;
 done
 
@@ -71,13 +71,13 @@ sample=${file##*/}
 sample=${file%%_*}; 
 #can add line here to remove contig header whitespace if necessary
 #blast the current assembly against phi6 M segment reference
-blastn -query ${sample}${sample_suffix}_output/${sample}${sample_suffix}_scaffolds.fasta -subject phi6_M.fasta -outfmt '6 delim=,' -qcov_hsp_perc 20 >  ${sample}${sample_suffix}_output/${sample}${sample_suffix}_scaffolds_M_blastout.csv;
-        blast_check="$(cat ${sample}${sample_suffix}_output/${sample}${sample_suffix}_scaffolds_M_blastout.csv)"
+blastn -query ${sample}${sample_suffix}_output/${sample}${sample_suffix}_contigs.fasta -subject phi6_M.fasta -outfmt '6 delim=,' -qcov_hsp_perc 20 >  ${sample}${sample_suffix}_output/${sample}${sample_suffix}_contigs_M_blastout.csv;
+        blast_check="$(cat ${sample}${sample_suffix}_output/${sample}${sample_suffix}_contigs_M_blastout.csv)"
         if [ -n "${blast_check}" ]; then
                 echo "${sample} ${blast_check} not empty"
-                #makes file with scaffold names only
-                awk -F"," '{print $1}' ${sample}${sample_suffix}_output/${sample}${sample_suffix}_scaffolds_M_blastout.csv > ${sample}${sample_suffix}_output/${sample}${sample_suffix}_scaffolds_M_blastout_names.txt;
-                cat ${sample}${sample_suffix}_output/${sample}${sample_suffix}_scaffolds_M_blastout_names.txt | awk '{gsub("_","\\_",$0);$0="(?s)^>"$0".*?(?=\\n(\\z|>))"}1' | pcregrep -oM -f - ${sample}${sample_suffix}_output/${sample}${sample_suffix}_scaffolds.fasta >> ${sample}${sample_suffix}_output/${sample}${sample_suffix}_M_scaffolds.fasta
+                #makes file with contig names only
+                awk -F"," '{print $1}' ${sample}${sample_suffix}_output/${sample}${sample_suffix}_contigs_M_blastout.csv > ${sample}${sample_suffix}_output/${sample}${sample_suffix}_contigs_M_blastout_names.txt;
+                cat ${sample}${sample_suffix}_output/${sample}${sample_suffix}_contigs_M_blastout_names.txt | awk '{gsub("_","\\_",$0);$0="(?s)^>"$0".*?(?=\\n(\\z|>))"}1' | pcregrep -oM -f - ${sample}${sample_suffix}_output/${sample}${sample_suffix}_contigs.fasta >> ${sample}${sample_suffix}_output/${sample}${sample_suffix}_M_contigs.fasta
         fi;
 done
 
@@ -88,22 +88,22 @@ sample=${file##*/}
 sample=${file%%_*}; 
 #can add line here to remove contig header whitespace if necessary
 #blast the current assembly against phi6 M segment reference
-blastn -query ${sample}${sample_suffix}_output/${sample}${sample_suffix}_scaffolds.fasta -subject phi6_L.fasta -outfmt '6 delim=,' -qcov_hsp_perc 20 >  ${sample}${sample_suffix}_output/${sample}${sample_suffix}_scaffolds_L_blastout.csv;
-        blast_check="$(cat ${sample}${sample_suffix}_output/${sample}${sample_suffix}_scaffolds_L_blastout.csv)"
+blastn -query ${sample}${sample_suffix}_output/${sample}${sample_suffix}_contigs.fasta -subject phi6_L.fasta -outfmt '6 delim=,' -qcov_hsp_perc 20 >  ${sample}${sample_suffix}_output/${sample}${sample_suffix}_contigs_L_blastout.csv;
+        blast_check="$(cat ${sample}${sample_suffix}_output/${sample}${sample_suffix}_contigs_L_blastout.csv)"
         if [ -n "${blast_check}" ]; then
                 echo "${sample} ${blast_check} not empty"
-                #makes file with scaffold names only
-                awk -F"," '{print $1}' ${sample}${sample_suffix}_output/${sample}${sample_suffix}_scaffolds_L_blastout.csv > ${sample}${sample_suffix}_output/${sample}${sample_suffix}_scaffolds_L_blastout_names.txt;
-                cat ${sample}${sample_suffix}_output/${sample}${sample_suffix}_scaffolds_L_blastout_names.txt | awk '{gsub("_","\\_",$0);$0="(?s)^>"$0".*?(?=\\n(\\z|>))"}1' | pcregrep -oM -f - ${sample}${sample_suffix}_output/${sample}${sample_suffix}_scaffolds.fasta >> ${sample}${sample_suffix}_output/${sample}${sample_suffix}_L_scaffolds.fasta
+                #makes file with contig names only
+                awk -F"," '{print $1}' ${sample}${sample_suffix}_output/${sample}${sample_suffix}_contigs_L_blastout.csv > ${sample}${sample_suffix}_output/${sample}${sample_suffix}_contigs_L_blastout_names.txt;
+                cat ${sample}${sample_suffix}_output/${sample}${sample_suffix}_contigs_L_blastout_names.txt | awk '{gsub("_","\\_",$0);$0="(?s)^>"$0".*?(?=\\n(\\z|>))"}1' | pcregrep -oM -f - ${sample}${sample_suffix}_output/${sample}${sample_suffix}_contigs.fasta >> ${sample}${sample_suffix}_output/${sample}${sample_suffix}_L_contigs.fasta
         fi;
 done
 
 
 #S segment matches filtering!
 #print output to file with the following headers: 
-echo "sample,segment,num S scaffolds,max S scaffold length,min S scaffold length,max S kmer coverage,min S kmer coverage,avg S scaffold pairwise distance,min S scaffold pairwise distance,min S scaffold pairwise distance" > S_all_scaffold_stats.csv
+echo "sample,segment,num S contigs,max S contig length,min S contig length,max S kmer coverage,min S kmer coverage,avg S contig pairwise distance,min S contig pairwise distance,min S contig pairwise distance" > S_all_contig_stats.csv
 
-for file in *${sample_suffix}_output/*${sample_suffix}_S_scaffolds.fasta; 
+for file in *${sample_suffix}_output/*${sample_suffix}_S_contigs.fasta; 
   do cov_list=();
   len_list=();
   #get filename
@@ -111,8 +111,8 @@ for file in *${sample_suffix}_output/*${sample_suffix}_S_scaffolds.fasta;
   #get sample letter from file name:
   #sample=${fileonly##*/};
   sample=${fileonly%%_*};
-  echo "finding scaffolds with kmer cov > 30% of max for sample ${sample}";
-  #loop thru the scaffold headers in the current sample scaffold file:
+  echo "finding contigs with kmer cov > 30% of max for sample ${sample}";
+  #loop thru the contig headers in the current sample contig file:
   for scaff in $(grep '>' $file); 
     #extract coverage value (as string)
     do cov=${scaff##*multi=};
@@ -159,19 +159,19 @@ for file in *${sample_suffix}_output/*${sample_suffix}_S_scaffolds.fasta;
   sort_filt_cov_values=(`printf '%s\n' "${filtered_cov_values[@]}" | sort -gr`); 
   sort_filt_len_values=(`printf '%s\n' "${filtered_len_values[@]}" | sort -gr`);
   #after going thru whole file, add the sequences baseed on the filtered headers to new fasta called ..covfilt...fasta
-  awk 'BEGIN{FS="\n";RS=">";ORS=""} (NR==FNR)&&(NR>1){headers[$1];next} ($1 in headers){print ">" $0}' ${sample}${sample_suffix}_output/${fileonly}_covlenfilt_names.txt ${sample}${sample_suffix}_output/${sample}${sample_suffix}_S_scaffolds.fasta >> ${sample}${sample_suffix}_output/${sample}${sample_suffix}_S_covlenfilt_scaffolds.fasta;
+  awk 'BEGIN{FS="\n";RS=">";ORS=""} (NR==FNR)&&(NR>1){headers[$1];next} ($1 in headers){print ">" $0}' ${sample}${sample_suffix}_output/${fileonly}_covlenfilt_names.txt ${sample}${sample_suffix}_output/${sample}${sample_suffix}_S_contigs.fasta >> ${sample}${sample_suffix}_output/${sample}${sample_suffix}_S_covlenfilt_contigs.fasta;
   echo "kcov values above 30% or 300 = ${filtered_cov_values[@]} + length values above 20% or 800 = ${filtered_len_values[@]}";
   echo;
-  echo "${sample},s,$(grep -c '>' ${sample}${sample_suffix}_output/${sample}${sample_suffix}_S_covlenfilt_scaffolds.fasta),${sort_filt_len_values[0]},${sort_filt_len_values[-1]},${sort_filt_cov_values[0]},${sort_filt_cov_values[-1]}" >> S_all_scaffold_stats.csv;
+  echo "${sample},s,$(grep -c '>' ${sample}${sample_suffix}_output/${sample}${sample_suffix}_S_covlenfilt_contigs.fasta),${sort_filt_len_values[0]},${sort_filt_len_values[-1]},${sort_filt_cov_values[0]},${sort_filt_cov_values[-1]}" >> S_all_scaffold_stats.csv;
 done
 
 
 
 #filter M segment matches!
 #print output to file with the following headers: 
-echo "sample,segment,num M scaffolds,max M scaffold length,min M scaffold length,max M kmer coverage,min M kmer coverage,avg M scaffold pairwise distance,min M scaffold pairwise distance,min M scaffold pairwise distance" > M_all_scaffold_stats.csv
+echo "sample,segment,num M contigs,max M scaffold length,min M scaffold length,max M kmer coverage,min M kmer coverage,avg M scaffold pairwise distance,min M scaffold pairwise distance,min M scaffold pairwise distance" > M_all_scaffold_stats.csv
 
-for file in *${sample_suffix}_output/*${sample_suffix}_M_scaffolds.fasta; 
+for file in *${sample_suffix}_output/*${sample_suffix}_M_contigs.fasta; 
   do cov_list=();
   len_list=();
   #get filename
@@ -179,18 +179,18 @@ for file in *${sample_suffix}_output/*${sample_suffix}_M_scaffolds.fasta;
   #get sample letter from file name:
   #sample=${fileonly##*/};
   sample=${fileonly%%_*};
-  echo "finding scaffolds with kmer cov > 30% of max for sample ${sample}";
+  echo "finding contigs with kmer cov > 30% of max for sample ${sample}";
   #loop thru the scaffold headers in the current sample scaffold file:
   for scaff in $(grep '>' $file); 
     #extract coverage value (as string)
-    do cov=${scaff##*_};
+    do cov=${scaff##*multi=};
+    cov=${cov%%_*};
     echo "current scaffold = ${scaff}"
     #add kmer ov value to list
-    cov_list+=("${cov}");
-     
+    cov_list+=("${cov}");    
+
     #extract length value (as string)
-    len=${scaff##*length_};
-    len=${len%%_*};
+    len=${scaff##*len=};
     #add kmer ov value to list
     len_list+=("${len}");
   done;
@@ -226,19 +226,19 @@ for file in *${sample_suffix}_output/*${sample_suffix}_M_scaffolds.fasta;
   sort_filt_cov_values=(`printf '%s\n' "${filtered_cov_values[@]}" | sort -gr`); 
   sort_filt_len_values=(`printf '%s\n' "${filtered_len_values[@]}" | sort -gr`);
   #after going thru whole file, add the sequences baseed on the filtered headers to new fasta called ..covfilt...fasta
-  awk 'BEGIN{FS="\n";RS=">";ORS=""} (NR==FNR)&&(NR>1){headers[$1];next} ($1 in headers){print ">" $0}' ${sample}${sample_suffix}_output/${fileonly}_covlenfilt_names.txt ${sample}${sample_suffix}_output/${sample}${sample_suffix}_M_scaffolds.fasta >> ${sample}${sample_suffix}_output/${sample}${sample_suffix}_M_covlenfilt_scaffolds.fasta;
+  awk 'BEGIN{FS="\n";RS=">";ORS=""} (NR==FNR)&&(NR>1){headers[$1];next} ($1 in headers){print ">" $0}' ${sample}${sample_suffix}_output/${fileonly}_covlenfilt_names.txt ${sample}${sample_suffix}_output/${sample}${sample_suffix}_M_contigs.fasta >> ${sample}${sample_suffix}_output/${sample}${sample_suffix}_M_covlenfilt_contigs.fasta;
   echo "kcov values above 30% or 300 = ${filtered_cov_values[@]} + length values above 20% or 800 = ${filtered_len_values[@]}";
   echo;
-  echo "${sample},m,$(grep -c '>' ${sample}${sample_suffix}_output/${sample}${sample_suffix}_M_covlenfilt_scaffolds.fasta),${sort_filt_len_values[0]},${sort_filt_len_values[-1]},${sort_filt_cov_values[0]},${sort_filt_cov_values[-1]}" >> M_all_scaffold_stats.csv;
+  echo "${sample},m,$(grep -c '>' ${sample}${sample_suffix}_output/${sample}${sample_suffix}_M_covlenfilt_contigs.fasta),${sort_filt_len_values[0]},${sort_filt_len_values[-1]},${sort_filt_cov_values[0]},${sort_filt_cov_values[-1]}" >> M_all_scaffold_stats.csv;
 done
 
 
 
 #L segment matches filtering!
 #print output to file with the following headers: 
-echo "sample,segment,num L scaffolds,max L scaffold length,min L scaffold length,max L kmer coverage,min L kmer coverage,avg L scaffold pairwise distance,min L scaffold pairwise distance,min L scaffold pairwise distance" > L_all_scaffold_stats.csv
+echo "sample,segment,num L contigs,max L scaffold length,min L scaffold length,max L kmer coverage,min L kmer coverage,avg L scaffold pairwise distance,min L scaffold pairwise distance,min L scaffold pairwise distance" > L_all_scaffold_stats.csv
 
-for file in *${sample_suffix}_output/*${sample_suffix}_L_scaffolds.fasta; 
+for file in *${sample_suffix}_output/*${sample_suffix}_L_contigs.fasta; 
   do cov_list=();
   len_list=();
   #get filename
@@ -246,17 +246,18 @@ for file in *${sample_suffix}_output/*${sample_suffix}_L_scaffolds.fasta;
   #get sample letter from file name:
   #sample=${fileonly##*/};
   sample=${fileonly%%_*};
-  echo "finding scaffolds with kmer cov > 30% of max for sample ${sample}";
+  echo "finding contigs with kmer cov > 30% of max for sample ${sample}";
   #loop thru the scaffold headers in the current sample scaffold file:
   for scaff in $(grep '>' $file); 
     #extract coverage value (as string)
-    do cov=${scaff##*_};
+    do cov=${scaff##*multi=};
+    cov=${cov%%_*};
     echo "current scaffold = ${scaff}"
     #add kmer ov value to list
-    cov_list+=("${cov}");
+    cov_list+=("${cov}");    
+
     #extract length value (as string)
-    len=${scaff##*length_};
-    len=${len%%_*};
+    len=${scaff##*len=};
     #add kmer ov value to list
     len_list+=("${len}");
     
@@ -293,10 +294,10 @@ for file in *${sample_suffix}_output/*${sample_suffix}_L_scaffolds.fasta;
   sort_filt_cov_values=(`printf '%s\n' "${filtered_cov_values[@]}" | sort -gr`); 
   sort_filt_len_values=(`printf '%s\n' "${filtered_len_values[@]}" | sort -gr`);
   #after going thru whole file, add the sequences baseed on the filtered headers to new fasta called ..covfilt...fasta
-  awk 'BEGIN{FS="\n";RS=">";ORS=""} (NR==FNR)&&(NR>1){headers[$1];next} ($1 in headers){print ">" $0}' ${sample}${sample_suffix}_output/${fileonly}_covlenfilt_names.txt ${sample}${sample_suffix}_output/${sample}${sample_suffix}_L_scaffolds.fasta >> ${sample}${sample_suffix}_output/${sample}${sample_suffix}_L_covlenfilt_scaffolds.fasta;
+  awk 'BEGIN{FS="\n";RS=">";ORS=""} (NR==FNR)&&(NR>1){headers[$1];next} ($1 in headers){print ">" $0}' ${sample}${sample_suffix}_output/${fileonly}_covlenfilt_names.txt ${sample}${sample_suffix}_output/${sample}${sample_suffix}_L_contigs.fasta >> ${sample}${sample_suffix}_output/${sample}${sample_suffix}_L_covlenfilt_contigs.fasta;
   echo "kcov values above 30% or 300 = ${filtered_cov_values[@]} + length values above 20% or 800 = ${filtered_len_values[@]}";
   echo;
-  echo "${sample},l,$(grep -c '>' ${sample}${sample_suffix}_output/${sample}${sample_suffix}_L_covlenfilt_scaffolds.fasta),${sort_filt_len_values[0]},${sort_filt_len_values[-1]},${sort_filt_cov_values[0]},${sort_filt_cov_values[-1]}" >> L_all_scaffold_stats.csv;
+  echo "${sample},l,$(grep -c '>' ${sample}${sample_suffix}_output/${sample}${sample_suffix}_L_covlenfilt_contigs.fasta),${sort_filt_len_values[0]},${sort_filt_len_values[-1]},${sort_filt_cov_values[0]},${sort_filt_cov_values[-1]}" >> L_all_scaffold_stats.csv;
 done
 
 
@@ -305,14 +306,14 @@ done
 #sed -i '1{s/$/,avg scaffold pairwise identity,/}' L_all_scaffold_stats.csv
 
 
-for file in *${sample_suffix}_output/*${sample_suffix}_L_scaffolds.fasta; 
+for file in *${sample_suffix}_output/*${sample_suffix}_L_contigs.fasta; 
   #get filename
   do fileonly=$(basename $file); 
   #get sample letter from file namel
   #sample=${fileonly##*/};
   sample=${fileonly%%_*};
    
-  cp ${sample}${sample_suffix}_output/${sample}${sample_suffix}_L_covlenfilt_scaffolds.fasta test;
+  cp ${sample}${sample_suffix}_output/${sample}${sample_suffix}_L_covlenfilt_contigs.fasta test;
   clustalw test;clustalw -outputtree=dist -tree -infile=test.aln;l test.aln;lls test.dst;
   cp test.dst ${sample}${sample_suffix}_output/${sample}${sample_suffix}_L_covlenfilt_clustal.dst;
   dist_arr=();
@@ -339,14 +340,14 @@ done
 
 
 
-for file in *${sample_suffix}_output/*${sample_suffix}_M_scaffolds.fasta; 
+for file in *${sample_suffix}_output/*${sample_suffix}_M_contigs.fasta; 
   #get filename
   do fileonly=$(basename $file); 
   #get sample letter from file namel
   #sample=${fileonly##*/};
   sample=${fileonly%%_*};
    
-  cp ${sample}${sample_suffix}_output/${sample}${sample_suffix}_M_covlenfilt_scaffolds.fasta test;
+  cp ${sample}${sample_suffix}_output/${sample}${sample_suffix}_M_covlenfilt_contigs.fasta test;
   clustalw test;clustalw -outputtree=dist -tree -infile=test.aln;l test.aln;lls test.dst;
   cp test.dst ${sample}${sample_suffix}_output/${sample}${sample_suffix}_M_covlenfilt_clustal.dst;
   dist_arr=();
@@ -371,14 +372,14 @@ sed -i "${line%%:*}{s/$/,${avg},${sort_dist_arr[0]},${sort_dist_arr[-1]}/}" M_al
 rm test*
 done
 
-for file in *${sample_suffix}_output/*${sample_suffix}_S_scaffolds.fasta; 
+for file in *${sample_suffix}_output/*${sample_suffix}_S_contigs.fasta; 
   #get filename
   do fileonly=$(basename $file); 
   #get sample letter from file namel
   #sample=${fileonly##*/};
   sample=${fileonly%%_*};
    
-  cp ${sample}${sample_suffix}_output/${sample}${sample_suffix}_S_covlenfilt_scaffolds.fasta test;
+  cp ${sample}${sample_suffix}_output/${sample}${sample_suffix}_S_covlenfilt_contigs.fasta test;
   clustalw test;clustalw -outputtree=dist -tree -infile=test.aln;l test.aln;l test.dst;
   cp test.dst ${sample}${sample_suffix}_output/${sample}${sample_suffix}_S_covlenfilt_clustal.dst;
   dist_arr=();
@@ -396,9 +397,9 @@ for file in *${sample_suffix}_output/*${sample_suffix}_S_scaffolds.fasta;
 len=${#dist_arr[@]}
 sort_dist_arr=(`printf '%s\n' "${dist_arr[@]}" | sort -gr`); 
 avg=$(echo "$sum/$len"|bc -l)
-line=$(grep -no "${sample}," S_all_scaffold_stats.csv);
+line=$(grep -no "${sample}," S_all_contig_stats.csv);
 
-sed -i "${line%%:*}{s/$/,${avg},${sort_dist_arr[0]},${sort_dist_arr[-1]}/}" S_all_scaffold_stats.csv;
+sed -i "${line%%:*}{s/$/,${avg},${sort_dist_arr[0]},${sort_dist_arr[-1]}/}" S_all_contig_stats.csv;
 
 rm test*
 done
