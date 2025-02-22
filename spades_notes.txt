@@ -673,3 +673,57 @@ done
 
 
 #to view
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+#megahit - at Dino's suggestion
+
+for pair in final_trimmed_fastqs/*_SXX_L001_001.R1.qhtrim.unmapped.sorted2.fastq; 
+do file=$(basename $pair); 
+sample_temp=${file%%_*}; 
+sample=$(basename $sample_temp);
+megahit -1 final_trimmed_fastqs/${sample}_SXX_L001_001.R1.qhtrim.unmapped.sorted2.fastq -2 final_trimmed_fastqs/${sample}_SXX_L001_001.R2.qhtrim.unmapped.sorted2.fastq -o megahit/${sample}_megahit_output -t 12 -m 50000000;
+done
+
+for direct in *_megahit_output; 
+do file=$(basename $direct); 
+sample=${file##*/}
+sample=${file%%_*}; 
+mv ${sample}_megahit_output/final.contigs.fa ${sample}_megahit_output/${sample}_megahit_contigs.fasta;
+#in readnorm conda env, use reformat.sh from bbtools to remove spaces from fasta heaters
+reformat.sh in=${sample}_megahit_output/${sample}_megahit_contigs.fasta out=${sample}_megahit_output/${sample}_megahit_contigs.refmt.fasta addunderscore;
+mv ${sample}_megahit_output/${sample}_megahit_contigs.refmt.fasta ${sample}_megahit_output/${sample}_megahit_contigs.fasta 
+done
+
+
+#megahit with normalized 4 reads
+for pair in normalized4_trimmed_reads/*_SXX_L001_001.R1.qhtrim.unmapped.sorted2.bbnorm4.fastq; 
+do file=$(basename $pair); 
+sample_temp=${file%%_*}; 
+sample=$(basename $sample_temp); 
+megahit -1 normalized4_trimmed_reads/${sample}_SXX_L001_001.R1.qhtrim.unmapped.sorted2.bbnorm4.fastq -2 normalized4_trimmed_reads/${sample}_SXX_L001_001.R2.qhtrim.unmapped.sorted2.bbnorm4.fastq -o megahit/${sample}_norm4_megahit_output -t 12 -m 50000000;
+done
+
+for direct in *_norm4_megahit_output; 
+do file=$(basename $direct); 
+sample=${file##*/}
+sample=${file%%_*}; 
+mv ${sample}_norm4_megahit_output/final.contigs.fa ${sample}_norm4_megahit_output/${sample}_norm4_megahit_contigs.fasta;
+#in readnorm conda env, use reformat.sh from bbtools to remove spaces from fasta heaters
+reformat.sh in=${sample}_norm4_megahit_output/${sample}_norm4_megahit_contigs.fasta out=${sample}_norm4_megahit_output/${sample}_norm4_megahit_contigs.refmt.fasta addunderscore;
+mv ${sample}_norm4_megahit_output/${sample}_norm4_megahit_contigs.refmt.fasta ${sample}_norm4_megahit_output/${sample}_norm4_megahit_contigs.fasta 
+done
+
+bash filter_megahit_scaffolds.sh -d _norm4_megahit
