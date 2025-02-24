@@ -411,6 +411,24 @@ done
 
 
 
+for file in *${sample_suffix}_output/*${sample_suffix}_L_covlenfilt_contigs.fasta; 
+  #get filename
+  do fileonly=$(basename $file); 
+  #get sample letter from file namel
+  #sample=${fileonly##*/};
+  sample=${fileonly%%_*};
+  bowtie2-build ${sample}${sample_suffix}_output/${sample}${sample_suffix}_L_covlenfilt_contigs.fasta ${sample}${sample_suffix}_output/${sample}${sample_suffix}_L_covlenfilt_contigs_DB;
+  bowtie2 -p 8 -x ${sample}${sample_suffix}_output/${sample}${sample_suffix}_L_covlenfilt_contigs_DB -1 /group/sldmunozgrp/cm_cysto_miseq_M1382P_Mattson/final_trimmed_fastqs/${sample}_SXX_L001_001.R1.qhtrim.unmapped.sorted2.fastq  -2 /group/sldmunozgrp/cm_cysto_miseq_M1382P_Mattson/final_trimmed_fastqs/${sample}_SXX_L001_001.R2.qhtrim.unmapped.sorted2.fastq  -S ${sample}${sample_suffix}_output/${sample}${sample_suffix}_reads_to_L_covlenfilt_assembly.sam > ${sample}${sample_suffix}_output/${sample}${sample_suffix}_reads_to_L_covlenfilt_assembly_bowtie2log.txt 2>&1;
+  match=$(grep "aligned concordantly exactly 1 time" ${sample}${sample_suffix}_output/${sample}${sample_suffix}_reads_to_L_covlenfilt_assembly_bowtie2log.txt);
+  matchtemp=${match%%%*};
+  echo;
+  echo "match for aligned concordantly output line = ${match}, and after 1st parse step matchtemp = ${matchtemp}";
+  concordant=${matchtemp##*\(};
+  echo;
+  echo "% concordant reads variable currently set to ${concordant} for sample ${sample}";
+  linematch=$(grep -no "${sample}," L_all_contig_stats.csv);
+  sed -i "${linematch%%:*}{s/$/,${concordant}/}" L_all_contig_stats.csv;
+  done
 
 
 
