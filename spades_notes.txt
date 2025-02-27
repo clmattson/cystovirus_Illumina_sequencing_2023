@@ -813,6 +813,26 @@ bash filter_megahit_scaffolds.sh -d _megahit
 
 
 
-miseq1419 reads but with normalization: 
+#miseq1419 reads but with normalization: 
 
+for pair in final_trimmed_fastqs/*_SXX_L001_001.R1.qhtrim.unmapped.sorted2.fastq;  
+do file=$(basename $pair);  sample_temp=${file%%_*};  
+sample=$(basename $sample_temp);  
+bbnorm.sh tgt=325 max=350 in=final_trimmed_fastqs/${sample}_SXX_L001_001.R1.qhtrim.unmapped.sorted2.fastq in2=final_trimmed_fastqs/${sample}_SXX_L001_001.R2.qhtrim.unmapped.sorted2.fastq out=normalized3_trimmed_reads/${sample}_SXX_L001_001.R1.qhtrim.unmapped.sorted2.bbnorm3.fastq out2=normalized3_trimmed_reads/${sample}_SXX_L001_001.R2.qhtrim.unmapped.sorted2.bbnorm3.fastq hist=normalized3_trimmed_reads/${sample}_bbnorm3_histogram_out;  
+done
 
+#re-do meta spades run (with new tmux sess too):
+for pair in normalized_trimmed_reads/*_SXX_L001_001.R1.qhtrim.unmapped.sorted2.bbnorm.fastq; 
+do file=$(basename $pair); 
+sample_temp=${file%%_*}; 
+sample=$(basename $sample_temp); 
+spades.py --meta --pe1-1 normalized3_trimmed_reads/${sample}_SXX_L001_001.R1.qhtrim.unmapped.sorted2.bbnorm3.fastq --pe1-2 normalized3_trimmed_reads/${sample}_SXX_L001_001.R2.qhtrim.unmapped.sorted2.bbnorm3.fastq -o spades/norm3_meta/${sample}_norm3_meta_spades_output;
+done
+
+for direct in *_norm3_meta_spades_output; 
+do file=$(basename $direct); 
+sample=${file##*/}
+sample=${file%%_*}; 
+mv ${sample}_norm3_meta_spades_output/contigs.fasta ${sample}_norm3_meta_spades_output/${sample}_norm3_meta_spades_contigs.fasta;
+mv ${sample}_norm3_meta_spades_output/scaffolds.fasta ${sample}_norm3_meta_spades_output/${sample}_norm3_meta_spades_scaffolds.fasta;
+done
