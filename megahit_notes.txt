@@ -1,0 +1,149 @@
+
+
+
+#trying megahit on miseq M1382P run - at Dino's suggestion
+
+for pair in final_trimmed_fastqs/*_SXX_L001_001.R1.qhtrim.unmapped.sorted2.fastq; 
+do file=$(basename $pair); 
+sample_temp=${file%%_*}; 
+sample=$(basename $sample_temp);
+megahit -1 final_trimmed_fastqs/${sample}_SXX_L001_001.R1.qhtrim.unmapped.sorted2.fastq -2 final_trimmed_fastqs/${sample}_SXX_L001_001.R2.qhtrim.unmapped.sorted2.fastq -o megahit/${sample}_megahit_output -t 12 -m 50000000;
+done
+
+for direct in *_megahit_output; 
+do file=$(basename $direct); 
+sample=${file##*/}
+sample=${file%%_*}; 
+mv ${sample}_megahit_output/final.contigs.fa ${sample}_megahit_output/${sample}_megahit_contigs.fasta;
+#in readnorm conda env, use reformat.sh from bbtools to remove spaces from fasta heaters
+reformat.sh in=${sample}_megahit_output/${sample}_megahit_contigs.fasta out=${sample}_megahit_output/${sample}_megahit_contigs.refmt.fasta addunderscore;
+mv ${sample}_megahit_output/${sample}_megahit_contigs.refmt.fasta ${sample}_megahit_output/${sample}_megahit_contigs.fasta 
+done
+
+#needs 6 cores and 50000 mem
+#megahit with normalized 4 reads
+for pair in normalized4_trimmed_reads/*_SXX_L001_001.R1.qhtrim.unmapped.sorted2.bbnorm4.fastq; 
+do file=$(basename $pair); 
+sample_temp=${file%%_*}; 
+sample=$(basename $sample_temp); 
+megahit -1 normalized4_trimmed_reads/${sample}_SXX_L001_001.R1.qhtrim.unmapped.sorted2.bbnorm4.fastq -2 normalized4_trimmed_reads/${sample}_SXX_L001_001.R2.qhtrim.unmapped.sorted2.bbnorm4.fastq -o megahit/${sample}_norm4_megahit_output -t 12 -m 50000000;
+done
+
+#in readnorm conda env, use reformat.sh from bbtools to remove spaces from fasta heaters output by megahit:
+for direct in *_norm4_megahit_output; 
+do file=$(basename $direct); 
+sample=${file##*/}
+sample=${file%%_*}; 
+mv ${sample}_norm4_megahit_output/final.contigs.fa ${sample}_norm4_megahit_output/${sample}_norm4_megahit_contigs.fasta;
+reformat.sh in=${sample}_norm4_megahit_output/${sample}_norm4_megahit_contigs.fasta out=${sample}_norm4_megahit_output/${sample}_norm4_megahit_contigs.refmt.fasta addunderscore;
+mv ${sample}_norm4_megahit_output/${sample}_norm4_megahit_contigs.refmt.fasta ${sample}_norm4_megahit_output/${sample}_norm4_megahit_contigs.fasta 
+done
+
+#use my script to get output tables:
+bash filter_megahit_scaffolds.sh -d _norm4_megahit #(had to update some things for compatability with megahit, see code)
+
+
+
+# megahit but with norm3 bbnormalized reads for miseq M1382P run :
+
+for pair in normalized3_trimmed_reads/*_SXX_L001_001.R1.qhtrim.unmapped.sorted2.bbnorm3.fastq; 
+do file=$(basename $pair); 
+sample_temp=${file%%_*}; 
+sample=$(basename $sample_temp); 
+megahit -1 normalized3_trimmed_reads/${sample}_SXX_L001_001.R1.qhtrim.unmapped.sorted2.bbnorm3.fastq -2 normalized3_trimmed_reads/${sample}_SXX_L001_001.R2.qhtrim.unmapped.sorted2.bbnorm3.fastq -o megahit/${sample}_norm3_megahit_output -t 12 -m 50000000;
+done
+
+#in readnorm conda env, use reformat.sh from bbtools to remove spaces from fasta heaters
+for direct in *_norm3_megahit_output; 
+do file=$(basename $direct); 
+sample=${file##*/}
+sample=${file%%_*}; 
+mv ${sample}_norm3_megahit_output/final.contigs.fa ${sample}_norm3_megahit_output/${sample}_norm3_megahit_contigs.fasta;
+reformat.sh in=${sample}_norm3_megahit_output/${sample}_norm3_megahit_contigs.fasta out=${sample}_norm3_megahit_output/${sample}_norm3_megahit_contigs.refmt.fasta addunderscore;
+mv ${sample}_norm3_megahit_output/${sample}_norm3_megahit_contigs.refmt.fasta ${sample}_norm3_megahit_output/${sample}_norm3_megahit_contigs.fasta 
+done
+
+
+
+
+
+
+
+#other ser of reads (miseq1419) ,megahit:
+
+for pair in final_trimmed_fastqs/*_SXX_L001_001.R1.qhtrim.unmapped.sorted2.fastq;  do file=$(basename $pair);  sample_temp=${file%%_*};  sample=$(basename $sample_temp); megahit -1 final_trimmed_fastqs/${sample}_SXX_L001_001.R1.qhtrim.unmapped.sorted2.fastq -2 final_trimmed_fastqs/${sample}_SXX_L001_001.R2.qhtrim.unmapped.sorted2.fastq -o megahit/${sample}_megahit_output -t 12 -m 50000000; done
+
+for direct in *_megahit_output; 
+do file=$(basename $direct); 
+sample=${file##*/}
+sample=${file%%_*}; 
+mv ${sample}_megahit_output/final.contigs.fa ${sample}_megahit_output/${sample}_megahit_contigs.fasta;
+#in readnorm conda env, use reformat.sh from bbtools to remove spaces from fasta heaters
+reformat.sh in=${sample}_megahit_output/${sample}_megahit_contigs.fasta out=${sample}_megahit_output/${sample}_megahit_contigs.refmt.fasta addunderscore;
+mv ${sample}_megahit_output/${sample}_megahit_contigs.refmt.fasta ${sample}_megahit_output/${sample}_megahit_contigs.fasta 
+done
+
+#my script to get output tables, had to change 3 places with hard-coded file path
+bash filter_megahit_scaffolds.sh -d _megahit
+
+
+
+
+#miseq1419 reads, megahit but with normalization via bbnorm, same settings as 'norm 3' in the miseq 1382P run: 
+
+#do the read normalization step with bbnorm, same settings as prior 'norm3' in other miseq folder:
+for pair in final_trimmed_fastqs/*_SXX_L001_001.R1.qhtrim.unmapped.sorted2.fastq;  
+do file=$(basename $pair);  sample_temp=${file%%_*};  
+sample=$(basename $sample_temp);  
+bbnorm.sh tgt=325 max=350 in=final_trimmed_fastqs/${sample}_SXX_L001_001.R1.qhtrim.unmapped.sorted2.fastq in2=final_trimmed_fastqs/${sample}_SXX_L001_001.R2.qhtrim.unmapped.sorted2.fastq out=normalized3_trimmed_reads/${sample}_SXX_L001_001.R1.qhtrim.unmapped.sorted2.bbnorm3.fastq out2=normalized3_trimmed_reads/${sample}_SXX_L001_001.R2.qhtrim.unmapped.sorted2.bbnorm3.fastq hist=normalized3_trimmed_reads/${sample}_bbnorm3_histogram_out;  
+done
+
+#took forever (like < 15 hours), restarted with threads=12 and more cores on the srun command:
+for pair in final_trimmed_fastqs/*_SXX_L001_001.R1.qhtrim.unmapped.sorted2.fastq;  
+do file=$(basename $pair);  sample_temp=${file%%_*};  
+sample=$(basename $sample_temp);  
+bbnorm.sh threads=12 tgt=325 max=350 in=final_trimmed_fastqs/${sample}_SXX_L001_001.R1.qhtrim.unmapped.sorted2.fastq in2=final_trimmed_fastqs/${sample}_SXX_L001_001.R2.qhtrim.unmapped.sorted2.fastq out=normalized3_trimmed_reads/${sample}_SXX_L001_001.R1.qhtrim.unmapped.sorted2.bbnorm3.fastq out2=normalized3_trimmed_reads/${sample}_SXX_L001_001.R2.qhtrim.unmapped.sorted2.bbnorm3.fastq hist=normalized3_trimmed_reads/${sample}_bbnorm3_histogram_out;  
+done
+
+#re-do megahit
+for pair in normalized3_trimmed_reads/*_SXX_L001_001.R1.qhtrim.unmapped.sorted2.bbnorm3.fastq; 
+do file=$(basename $pair); 
+sample_temp=${file%%_*}; 
+sample=$(basename $sample_temp); 
+megahit -1 normalized3_trimmed_reads/${sample}_SXX_L001_001.R1.qhtrim.unmapped.sorted2.bbnorm3.fastq -2 normalized3_trimmed_reads/${sample}_SXX_L001_001.R2.qhtrim.unmapped.sorted2.bbnorm3.fastq -o megahit/${sample}_norm3_megahit_output -t 12 -m 50000000;
+done
+
+#change file names and add underscores to fasta headers
+for direct in *_norm3_megahit_output; 
+do file=$(basename $direct); 
+sample=${file##*/}
+sample=${file%%_*}; 
+mv ${sample}_norm3_megahit_output/final.contigs.fa ${sample}_norm3_megahit_output/${sample}_norm3_megahit_contigs.fasta;
+#in readnorm conda env, use reformat.sh from bbtools to remove spaces from fasta heaters
+reformat.sh in=${sample}_norm3_megahit_output/${sample}_norm3_megahit_contigs.fasta out=${sample}_norm3_megahit_output/${sample}_norm3_megahit_contigs.refmt.fasta addunderscore;
+mv ${sample}_norm3_megahit_output/${sample}_norm3_megahit_contigs.refmt.fasta ${sample}_norm3_megahit_output/${sample}_norm3_megahit_contigs.fasta;
+done
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+#manual correction:
+#in (cysto_illumina) cmatt5@c-8-46:/group/sldmunozgrp/cm_cysto_miseq_M1382P_Mattson/megahit/norm3$:
+cp -r A_norm3_megahit_output/ A_norm3_megahit_UNCORRECTED_output/
+cp -r L_norm3_megahit_output/ L_norm3_megahit_UNCORRECTED_output/
+cp -r Q_norm3_megahit_output/ Q_norm3_megahit_UNCORRECTED_output/
+cp -r T_norm3_megahit_output/ T_norm3_megahit_UNCORRECTED_output/
