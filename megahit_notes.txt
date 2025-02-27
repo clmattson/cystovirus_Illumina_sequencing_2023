@@ -128,13 +128,7 @@ done
 
 
 
-
-
-
-
-
-
-
+#all info stored in excel sheet assembly output data feb 2024.xlsx (named w wroong year lol)
 
 
 
@@ -147,3 +141,14 @@ cp -r A_norm3_megahit_output/ A_norm3_megahit_UNCORRECTED_output/
 cp -r L_norm3_megahit_output/ L_norm3_megahit_UNCORRECTED_output/
 cp -r Q_norm3_megahit_output/ Q_norm3_megahit_UNCORRECTED_output/
 cp -r T_norm3_megahit_output/ T_norm3_megahit_UNCORRECTED_output/
+
+#in
+
+(cysto_illumina) cmatt5@c-8-46:/group/sldmunozgrp/cm_cysto_miseq_M1419P_Mattson/megahit/norm3_megahit$ cp -r G1_norm3_megahit_output/ G1_norm3_megahit_UNCORRECTED_output/
+(cysto_illumina) cmatt5@c-8-46:/group/sldmunozgrp/cm_cysto_miseq_M1419P_Mattson/megahit/norm3_megahit$ cp -r L3_norm3_megahit_output/ L3_norm3_megahit_UNCORRECTED_output/
+(cysto_illumina) cmatt5@c-8-46:/group/sldmunozgrp/cm_cysto_miseq_M1419P_Mattson/megahit/norm3_megahit$ cp -r R3_norm3_megahit_output/ R3_norm3_megahit_UNCORRECTED_output/
+
+
+
+
+
