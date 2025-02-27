@@ -783,6 +783,13 @@ sample=$(basename $sample_temp);
 spades.py --meta --pe1-1 final_trimmed_fastqs/${sample}_SXX_L001_001.R1.qhtrim.unmapped.sorted2.fastq --pe1-2 final_trimmed_fastqs/${sample}_SXX_L001_001.R2.qhtrim.unmapped.sorted2.fastq -o spades/meta/${sample}_meta_spades_output;
 done
 
+for direct in *_meta_spades_output; 
+do file=$(basename $direct); 
+sample=${file##*/}
+sample=${file%%_*}; 
+mv ${sample}_meta_spades_output/contigs.fasta ${sample}_meta_spades_output/${sample}_meta_spades_contigs.fasta;
+mv ${sample}_meta_spades_output/scaffolds.fasta ${sample}_meta_spades_output/${sample}_meta_spades_scaffolds.fasta;
+done
 
 
 
@@ -802,4 +809,10 @@ mv ${sample}_megahit_output/${sample}_megahit_contigs.refmt.fasta ${sample}_mega
 done
 
 bash filter_megahit_scaffolds.sh -d _megahit
+
+
+
+
+miseq1419 reads but with normalization: 
+
 
