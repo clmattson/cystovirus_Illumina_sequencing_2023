@@ -1,0 +1,47 @@
+# Copy all raw data to new folder to re-do read processingon all fastqs
+
+#cp over Miseq 1382 run
+cp cm_cysto_miseq_M1382P_Mattson/fastqs/*.fastq cm_cysto_all_illumina/raw_fastqs/
+
+#re-download miseq 1419 run after it was re-demultiplexed to fix barcode issue and make copies:
+cd /group/sldmunozgrp/cm_cysto_miseq_M1419P_Mattson/data_redemuxed
+wget -r -nH -nc -np -R index.html* "http://slimsdata.genomecenter.ucdavis.edu/Data/b4093u4rje/240411_M01533_0123_MS3570686-300V2/Unaligned2/Project_SMCM_M1419P_Mattson/" &
+md5sum -c *
+cp cm_cysto_miseq_M1419P_Mattson/data_redemuxed/*.fastq cm_cysto_all_illumina/raw_fastqs/
+
+#use sra-toolkit to download alex data from SRA:
+
+srr_list="SRR9717273
+SRR9717274
+SRR9030131
+SRR9030132
+SRR9030133
+SRR9030134
+SRR9030135
+SRR9030136
+SRR8729117
+SRR8729118
+SRR8729119
+SRR8729120"
+
+for i in ${srr_list}; do echo $i; prefetch ${i}; done
+for i in ${srr_list}; do echo $i; fasterq-dump --split-files ${i}/${i}.sra; done
+
+
+#rename everything to get cmpatible and non-duplicate sample names:
+
+#rename MiSeq 1382 reads (already gunzipped so they end in *.fastq)
+for pair in *_*R1*.fastq;   do sample=${pair%%_L*};  echo $sample;  code=${pair%%_*};  echo ${code};  mv ${sample}_L001_R1_001.fastq ${code}miseq1382_SXX_L001_R1_001.fastq; mv ${sample}_L001_R2_001.fastq ${code}miseq1382_SXX_L001_R2_001.fastq; done
+
+#rename MiSeq 1419 reads (not gunzipped so they end in *.fastq.gz)
+for pair in *_*R1*.fastq.gz;   do sample=${pair%%_L*};  echo $sample;  code=${pair%%_*};  echo ${code};  mv ${sample}_L001_R1_001.fastq.gz ${code}miseq1419_SXX_L001_R1_001.fastq.gz; mv ${sample}_L001_R2_001.fastq.gz ${code}miseq1419_SXX_L001_R2_001.fastq.gz; done
+
+#rename alex DMSO phi6 data from SRA so that names are compatible and nothing needs to be re-coded
+for pair in SRR*_1.fastq;  do code=${pair%%_*};   echo ${code};  mv ${code}_1.fastq ${code}alexDMSO_SXX_L001_R1_001.fastq; mv ${code}_2.fastq ${code}alexDMSO_SXX_L001_R2_001.fastq; done
+
+
+
+
+
+
+
