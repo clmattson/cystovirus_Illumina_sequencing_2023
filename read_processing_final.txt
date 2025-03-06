@@ -42,6 +42,17 @@ for pair in SRR*_1.fastq;  do code=${pair%%_*};   echo ${code};  mv ${code}_1.fa
 
 
 
+for pair in *_*R1*.fastq; 
+#get leading sample name letter only
+do sample_temp=${pair%%_*};
+sample=$(basename $sample_temp)
+fastp --in1 ${sample}*R1*.fastq \
+  --in2 ${sample}*R2*.fastq \
+  --out1 ./fastp_trimmed_fastqs/${sample}_SXX_L001_R1_001.qtrim.fastq \
+  --out2 ./fastp_trimmed_fastqs/${sample}_SXX_L001_R2_001.qtrim.fastq \
+  --adapter_fasta adapters.fasta \
+  --length_required 31 --correction > fastp_trimmed_fastqs/${sample}_fastp_log.txt 2>&1;
+done
 
 
 
