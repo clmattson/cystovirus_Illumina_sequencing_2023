@@ -56,3 +56,93 @@ done
 
 
 
+#remove host contamination
+
+#build host db
+bowtie2-build P_savastanoi_ref.fasta Ps_db
+
+
+#align each set of reads to the host genome:
+
+for pair in fastp_trimmed_fastqs/*_*R1*.fastq; 
+#get leading sample name letter only
+do sample_temp=${pair%%_L0*};
+sample=$(basename $sample_temp);
+bowtie2 -p 8 -x Ps_db -1 fastp_trimmed_fastqs/${sample}_L001_R1_001.qtrim.fastq  -2 fastp_trimmed_fastqs/${sample}_L001_R2_001.qtrim.fastq  -S host_fastp_trimmed_fastqs/${sample}_L001_001.qtrim.htrim.sam > host_fastp_trimmed_fastqs/${sample}_bowtie2_hostalignment_log.txt 2>&1;
+done
+
+cd host_fastp_trimmed_fastqs
+
+for pair in *_L001_001.qtrim.htrim.sam; 
+#get leading sample name letter only
+do sample_temp=${pair%%_L0*};
+sample=$(basename $sample_temp);
+samtools view -bS ${pair} > ${sample}_L001_001.qtrim.htrim.bam;
+samtools sort -o ${sample}_L001_001.qtrim.htrim.sorted.bam -T ./samtools_temp_dir --threads 24 ${pair};
+done
+
+
+#so the '-f 12' flag means to keep only reads where both mates in the pair are unmapped (MAPPED, MATE UNMAPPED), which is more thorough since pe reads come from 1 piece of dna but lets compare to -f 4 -F 2 which is keep unmapped, exclude proper pairs. use samtools view -c to get read counts only rn:
+
+for pair in *_L001_001.qtrim.htrim.sorted.bam; 
+#get leading sample name letter only
+do sample_temp=${pair%%_L0*};
+sample=$(basename $sample_temp);
+echo "${sample}: -f12:";
+samtools view -c -f 12 ${pair};
+echo "${sample}: -f 4 -F 2:";
+samtools view -c -f 4 -F 2 ${pair};
+done
+
+#ok -f 12 seems to be more conservative (keeps less reads) so will move fwd with that.
+#(use cat cat <sample>_SXX_bowtie2_hostalignment_log.txt and then grep -A 1 "<sample>" samtools_filtering_unmapped_comaprison.txt to compare outputs from filtering)
+
+#execute filter step, re-sort the bams, and convert BAMs back into fastqs
+for pair in *_L001_001.qtrim.htrim.sorted.bam; 
+#get leading sample name letter only
+do sample_temp=${pair%%_L0*};
+sample=$(basename $sample_temp);
+samtools view -b -f 12 ${pair} > ${sample}_L001_001.qhtrim.sorted.unmapped.bam;
+samtools sort -o ${sample}_L001_001.qhtrim.unmapped.sorted2.bam -T ./samtools_temp_dir2 --threads 24 ${pair};
+samtools fastq -@ 8 ${sample}_L001_001.qhtrim.unmapped.sorted2.bam -1 ${sample}_L001_001.R1.qhtrim.unmapped.sorted2.fastq -2 ${sample}_L001_001.R2.qhtrim.unmapped.sorted2.fastq;
+done
+
+#move to /group/sldmunozgrp/cm_cysto_all_illumina/final_trimmed_fastqs:
+mv *.qhtrim.unmapped.sorted2.fastq ../../final_trimmed_fastqs
+
+
+#READ NORMALIZING wit bbnorm - "norm3" settings from test analysis:
+#(need new slurm for more cores):
+srun -c 6 -t 10:00:00 --mem=50000 --pty /bin/bash
+
+for pair in final_trimmed_fastqs/*_SXX_L001_001.R1.qhtrim.unmapped.sorted2.fastq;  
+do file=$(basename $pair);  sample_temp=${file%%_*};  
+sample=$(basename $sample_temp);  
+bbnorm.sh threads=12 tgt=325 max=350 in=final_trimmed_fastqs/${sample}_SXX_L001_001.R1.qhtrim.unmapped.sorted2.fastq in2=final_trimmed_fastqs/${sample}_SXX_L001_001.R2.qhtrim.unmapped.sorted2.fastq out=normalized3_trimmed_reads/${sample}_SXX_L001_001.R1.qhtrim.unmapped.sorted2.bbnorm3.fastq out2=normalized3_trimmed_reads/${sample}_SXX_L001_001.R2.qhtrim.unmapped.sorted2.bbnorm3.fastq hist=normalized3_trimmed_reads/${sample}_bbnorm3_histogram_out;  
+done
+
+#re-do megahit
+for pair in normalized3_trimmed_reads/*_SXX_L001_001.R1.qhtrim.unmapped.sorted2.bbnorm3.fastq; 
+do file=$(basename $pair); 
+sample_temp=${file%%_*}; 
+sample=$(basename $sample_temp); 
+megahit -1 normalized3_trimmed_reads/${sample}_SXX_L001_001.R1.qhtrim.unmapped.sorted2.bbnorm3.fastq -2 normalized3_trimmed_reads/${sample}_SXX_L001_001.R2.qhtrim.unmapped.sorted2.bbnorm3.fastq -o megahit/${sample}_norm3_megahit_output -t 12 -m 50000000;
+done
+
+#change file names and add underscores to fasta headers
+#in readnorm conda env, use reformat.sh from bbtools to remove spaces from fasta heaters
+
+for direct in *_norm3_megahit_output; 
+do file=$(basename $direct); 
+sample=${file##*/}
+sample=${file%%_*}; 
+mv ${sample}_norm3_megahit_output/final.contigs.fa ${sample}_norm3_megahit_output/${sample}_norm3_megahit_contigs.fasta;
+reformat.sh in=${sample}_norm3_megahit_output/${sample}_norm3_megahit_contigs.fasta out=${sample}_norm3_megahit_output/${sample}_norm3_megahit_contigs.refmt.fasta addunderscore;
+mv ${sample}_norm3_megahit_output/${sample}_norm3_megahit_contigs.refmt.fasta ${sample}_norm3_megahit_output/${sample}_norm3_megahit_contigs.fasta;
+done
+
+bash filter_megahit_scaffolds.sh -d "_norm3_megahit"
+
+
+
+
