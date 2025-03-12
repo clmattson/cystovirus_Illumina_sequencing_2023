@@ -105,6 +105,22 @@ fastp -w 12 --in1 ${sample}*R1*.fastq \
   --length_required 31 --correction --overrepresentation_analysis > fastp_combo_trimmed_fastqs/${sample}_fastp_log.txt 2>&1;
 done
 
+
+
+#follow up with bbduk? - in fastp_combo_trimmed_fastqs
+for pair in *_*R1*.fastq; 
+#get leading sample name letter only
+do sample_temp=${pair%%R1*};
+sample=$(basename $sample_temp);
+bbduk.sh in=${sample}R1_001.qtrim.fastq \
+in2=${sample}R2_001.qtrim.fastq \
+ref=adapters \
+out=./bbduk/${sample}R1_001.qtrim.bbduk.fastq \
+out2=./bbduk/${sample}R2_001.qtrim.bbduk.fastq \
+threads=12;
+done
+
+
 #########################################################################################################################################
 
 #remove host contamination
