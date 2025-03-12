@@ -54,7 +54,26 @@ fastp --in1 ${sample}*R1*.fastq \
   --length_required 31 --correction > fastp_trimmed_fastqs/${sample}_fastp_log.txt 2>&1;
 done
 
+#######################################################################################################################################
+       ########### RE-DO fastp trimming to get rid of weird repeated seqwuence ################
 
+#in raw_reads, use adapters_ufo.fasta instead of original, has weird junky sequence
+
+for pair in *_*R1*.fastq; 
+#get leading sample name letter only
+do sample_temp=${pair%%_*};
+sample=$(basename $sample_temp)
+fastp --in1 ${sample}*R1*.fastq 
+  --thread 12\
+  --in2 ${sample}*R2*.fastq \
+  --out1 ./fastp_ufo_trimmed_fastqs/${sample}_SXX_L001_R1_001.qtrim.fastq \
+  --out2 ./fastp_ufo_trimmed_fastqs/${sample}_SXX_L001_R2_001.qtrim.fastq \
+  --adapter_fasta adapters_ufo.fasta \
+  --length_required 31 --correction --overrepresentation_analysis > fastp_ufo_trimmed_fastqs/${sample}_fastp_log.txt 2>&1;
+done
+
+
+#########################################################################################################################################
 
 #remove host contamination
 
