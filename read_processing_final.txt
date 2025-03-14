@@ -291,3 +291,21 @@ mv ${sample}_norm3_bbduk_megahit_output/final.contigs.fa ${sample}_norm3_bbduk_m
 reformat.sh in=${sample}_norm3_bbduk_megahit_output/${sample}_norm3_bbduk_megahit_contigs.fasta out=${sample}_norm3_bbduk_megahit_output/${sample}_norm3_bbduk_megahit_contigs.refmt.fasta addunderscore;
 mv ${sample}_norm3_bbduk_megahit_output/${sample}_norm3_bbduk_megahit_contigs.refmt.fasta ${sample}_norm3_bbduk_megahit_output/${sample}_norm3_bbduk_megahit_contigs.fasta;
 done
+
+
+
+#maually corrected 3 genomes here
+
+
+#align reads back to assemblies: 
+
+#copy folders to redo sam calculation with trimmed but un-normalized reads:
+
+for direct in *_norm3_bbduk_megahit_output; 
+do file=$(basename $direct); 
+sample=${file##*/}
+sample=${file%%_*}; 
+mkdir ../final_assemblies/${sample}_norm3_bbduk_megahit_output;
+cp ${sample}_norm3_bbduk_megahit_output/${sample}_norm3_bbduk_megahit_contigs.fasta ../final_assemblies/${sample}_norm3_bbduk_megahit_output/${sample}_norm3_bbduk_megahit_contigs.fasta;
+done
+
