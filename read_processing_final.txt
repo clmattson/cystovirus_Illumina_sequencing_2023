@@ -267,6 +267,19 @@ done
 
 mv *.qhtrim.bbduk.unmapped.sorted2.fastq ../../final_bbduk_trimmed_fastqs
 
+##########################################################################################################################################
+#came back to reapir ... fastqs.... 
+#in conda env readnorm
+
+for pair in *_L001_001.R1.qhtrim.bbduk.unmapped.sorted2.fastq; 
+#get leading sample name letter only
+do sample_temp=${pair%%_L0*};
+sample=$(basename $sample_temp);
+repair.sh in=${sample}_L001_001.R1.qhtrim.bbduk.unmapped.sorted2.fastq in2=${sample}_L001_001.R2.qhtrim.bbduk.unmapped.sorted2.fastq out=repaired/${sample}_L001_001.R1.qhtrim.bbduk.unmapped.sorted2.repaired.fastq out2=repaired/${sample}_L001_001.R2.qhtrim.bbduk.unmapped.sorted2.repaired.fastq ow=f ain=t;
+done
+
+##########################################################################################################################################
+
 
 for pair in final_bbduk_trimmed_fastqs/*_SXX_L001_001.R1.qhtrim.bbduk.unmapped.sorted2.fastq;  
 do file=$(basename $pair);  sample_temp=${file%%_*};  
@@ -328,9 +341,18 @@ for direct in *_norm3_bbduk_megahit_output;
 do file=$(basename $direct); 
 sample=${file##*/}
 sample=${file%%_*}; 
-bwa mem ${sample}_norm3_bbduk_megahit_output/${sample}_norm3_bbduk_megahit_S_covlenfilt_contigs.fasta /group/sldmunozgrp/cm_cysto_all_illumina/raw_fastqs/${sample}_SXX_L001_R1_001.fastq  /group/sldmunozgrp/cm_cysto_all_illumina/raw_fastqs/${sample}_SXX_L001_R2_001.fastq -t 12 -o ${sample}_norm3_bbduk_megahit_output/${sample}_norm3_bbduk_megahit_S_covlenfilt_contigs.bwaMEM.sam;
-bwa mem ${sample}_norm3_bbduk_megahit_output/${sample}_norm3_bbduk_megahit_M_covlenfilt_contigs.fasta /group/sldmunozgrp/cm_cysto_all_illumina/raw_fastqs/${sample}_SXX_L001_R1_001.fastq  /group/sldmunozgrp/cm_cysto_all_illumina/raw_fastqs/${sample}_SXX_L001_R2_001.fastq -t 12 -o ${sample}_norm3_bbduk_megahit_output/${sample}_norm3_bbduk_megahit_M_covlenfilt_contigs.bwaMEM.sam;
-bwa mem ${sample}_norm3_bbduk_megahit_output/${sample}_norm3_bbduk_megahit_L_covlenfilt_contigs.fasta /group/sldmunozgrp/cm_cysto_all_illumina/raw_fastqs/${sample}_SXX_L001_R1_001.fastq  /group/sldmunozgrp/cm_cysto_all_illumina/raw_fastqs/${sample}_SXX_L001_R2_001.fastq -t 12 -o ${sample}_norm3_bbduk_megahit_output/${sample}_norm3_bbduk_megahit_L_covlenfilt_contigs.bwaMEM.sam;
+echo;
+echo "${sample} S:";
+echo;
+bwa mem ${sample}_norm3_bbduk_megahit_output/${sample}_norm3_bbduk_megahit_S_covlenfilt_contigs.fasta /group/sldmunozgrp/cm_cysto_all_illumina/final_bbduk_trimmed_fastqs/repaired/${sample}_SXX_L001_001.R1.qhtrim.bbduk.unmapped.sorted2.repaired.fastq  /group/sldmunozgrp/cm_cysto_all_illumina/final_bbduk_trimmed_fastqs/repaired/${sample}_SXX_L001_001.R2.qhtrim.bbduk.unmapped.sorted2.repaired.fastq -t 12 -o ${sample}_norm3_bbduk_megahit_output/${sample}_norm3_bbduk_megahit_S_covlenfilt_contigs.bwaMEM.sam;
+echo;
+echo "${sample} M:";
+echo;
+bwa mem ${sample}_norm3_bbduk_megahit_output/${sample}_norm3_bbduk_megahit_M_covlenfilt_contigs.fasta /group/sldmunozgrp/cm_cysto_all_illumina/final_bbduk_trimmed_fastqs/repaired/${sample}_SXX_L001_001.R1.qhtrim.bbduk.unmapped.sorted2.repaired.fastq  /group/sldmunozgrp/cm_cysto_all_illumina/final_bbduk_trimmed_fastqs/repaired/${sample}_SXX_L001_001.R2.qhtrim.bbduk.unmapped.sorted2.repaired.fastq -t 12 -o ${sample}_norm3_bbduk_megahit_output/${sample}_norm3_bbduk_megahit_M_covlenfilt_contigs.bwaMEM.sam;
+echo;
+echo "${sample} L:";
+echo;
+bwa mem ${sample}_norm3_bbduk_megahit_output/${sample}_norm3_bbduk_megahit_L_covlenfilt_contigs.fasta /group/sldmunozgrp/cm_cysto_all_illumina/final_bbduk_trimmed_fastqs/repaired/${sample}_SXX_L001_001.R1.qhtrim.bbduk.unmapped.sorted2.repaired.fastq  /group/sldmunozgrp/cm_cysto_all_illumina/final_bbduk_trimmed_fastqs/repaired/${sample}_SXX_L001_001.R2.qhtrim.bbduk.unmapped.sorted2.repaired.fastq -t 12 -o ${sample}_norm3_bbduk_megahit_output/${sample}_norm3_bbduk_megahit_L_covlenfilt_contigs.bwaMEM.sam;
 done
 
 for direct in *_norm3_bbduk_megahit_output; 
@@ -347,4 +369,12 @@ samtools view -bS ${sample}_norm3_bbduk_megahit_output/${sample}_norm3_bbduk_meg
 samtools sort -o ${sample}_norm3_bbduk_megahit_output/${sample}_norm3_bbduk_megahit_L_covlenfilt_contigs.bwaMEM.sorted.bam -T ./samtools_temp_dir --threads 24 ${sample}_norm3_bbduk_megahit_output/${sample}_norm3_bbduk_megahit_L_covlenfilt_contigs.bwaMEM.bam;
 samtools consensus -f FASTA -d 50 -C 20 -o ${sample}_norm3_bbduk_megahit_output/${sample}_norm3_bbduk_megahit_L_covlenfilt_consensus.fasta ${sample}_norm3_bbduk_megahit_output/${sample}_norm3_bbduk_megahit_L_covlenfilt_contigs.bwaMEM.sorted.bam;
 done
+
+for direct in *_norm3_bbduk_megahit_output; 
+do file=$(basename $direct); 
+sample=${file##*/}
+sample=${file%%_*};
+samtools 
+
+
 
