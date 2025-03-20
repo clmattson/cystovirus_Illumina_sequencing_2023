@@ -1,0 +1,389 @@
+# Copy all raw data to new folder to re-do read processingon all fastqs
+
+#cp over Miseq 1382 run
+cp cm_cysto_miseq_M1382P_Mattson/fastqs/*.fastq cm_cysto_all_illumina/raw_fastqs/
+
+#re-download miseq 1419 run after it was re-demultiplexed to fix barcode issue and make copies:
+cd /group/sldmunozgrp/cm_cysto_miseq_M1419P_Mattson/data_redemuxed
+wget -r -nH -nc -np -R index.html* "http://slimsdata.genomecenter.ucdavis.edu/Data/b4093u4rje/240411_M01533_0123_MS3570686-300V2/Unaligned2/Project_SMCM_M1419P_Mattson/" &
+md5sum -c *
+cp cm_cysto_miseq_M1419P_Mattson/data_redemuxed/*.fastq cm_cysto_all_illumina/raw_fastqs/
+
+#use sra-toolkit to download alex data from SRA:
+
+srr_list="SRR9717273
+SRR9717274
+SRR9030131
+SRR9030132
+SRR9030133
+SRR9030134
+SRR9030135
+SRR9030136
+SRR8729117
+SRR8729118
+SRR8729119
+SRR8729120"
+
+for i in ${srr_list}; do echo $i; prefetch ${i}; done
+for i in ${srr_list}; do echo $i; fasterq-dump --split-files ${i}/${i}.sra; done
+
+
+#rename everything to get cmpatible and non-duplicate sample names:
+
+#rename MiSeq 1382 reads (already gunzipped so they end in *.fastq)
+for pair in *_*R1*.fastq;   do sample=${pair%%_L*};  echo $sample;  code=${pair%%_*};  echo ${code};  mv ${sample}_L001_R1_001.fastq ${code}miseq1382_SXX_L001_R1_001.fastq; mv ${sample}_L001_R2_001.fastq ${code}miseq1382_SXX_L001_R2_001.fastq; done
+
+#rename MiSeq 1419 reads (not gunzipped so they end in *.fastq.gz)
+for pair in *_*R1*.fastq.gz;   do sample=${pair%%_L*};  echo $sample;  code=${pair%%_*};  echo ${code};  mv ${sample}_L001_R1_001.fastq.gz ${code}miseq1419_SXX_L001_R1_001.fastq.gz; mv ${sample}_L001_R2_001.fastq.gz ${code}miseq1419_SXX_L001_R2_001.fastq.gz; done
+
+#rename alex DMSO phi6 data from SRA so that names are compatible and nothing needs to be re-coded
+for pair in SRR*_1.fastq;  do code=${pair%%_*};   echo ${code};  mv ${code}_1.fastq ${code}alexDMSO_SXX_L001_R1_001.fastq; mv ${code}_2.fastq ${code}alexDMSO_SXX_L001_R2_001.fastq; done
+
+
+
+
+for pair in *_*R1*.fastq; 
+#get leading sample name letter only
+do sample_temp=${pair%%_*};
+sample=$(basename $sample_temp)
+fastp --in1 ${sample}*R1*.fastq \
+  --in2 ${sample}*R2*.fastq \
+  --out1 ./fastp_trimmed_fastqs/${sample}_SXX_L001_R1_001.qtrim.fastq \
+  --out2 ./fastp_trimmed_fastqs/${sample}_SXX_L001_R2_001.qtrim.fastq \
+  --adapter_fasta adapters.fasta \
+  --length_required 31 --correction > fastp_trimmed_fastqs/${sample}_fastp_log.txt 2>&1;
+done
+
+#######################################################################################################################################
+       ########### RE-DO fastp trimming to get rid of weird repeated seqwuence ################
+
+#in raw_reads, use adapters_ufo.fasta instead of original, has weird junky sequence
+
+for pair in *_*R1*.fastq; 
+#get leading sample name letter only
+do sample_temp=${pair%%_*};
+sample=$(basename $sample_temp)
+fastp -w 12 --in1 ${sample}*R1*.fastq \
+  --in2 ${sample}*R2*.fastq \
+  --out1 ./fastp_ufo_trimmed_fastqs/${sample}_SXX_L001_R1_001.qtrim.fastq \
+  --out2 ./fastp_ufo_trimmed_fastqs/${sample}_SXX_L001_R2_001.qtrim.fastq \
+  --adapter_fasta adapters_sus_leading_seq.fasta \
+  --length_required 31 --correction --overrepresentation_analysis > fastp_ufo_trimmed_fastqs/${sample}_fastp_log.txt 2>&1;
+done
+
+
+#I actually think trimming needs to be a combo of --detect adapter and a self-supplied fasta becuase with a few notable exceptions the original miseq 1382 #final_triummed_fastqs have the least instances of them
+
+#fastp used overlap analysis by default to trim adapters. i think any additional adapter settings turns this off so lets try the default method and see how that does:
+
+for pair in *_*R1*.fastq; 
+#get leading sample name letter only
+do sample_temp=${pair%%_*};
+sample=$(basename $sample_temp)
+fastp -w 12 --in1 ${sample}*R1*.fastq \
+  --in2 ${sample}*R2*.fastq \
+  --out1 ./fastp_ovlp_trimmed_fastqs/${sample}_SXX_L001_R1_001.qtrim.fastq \
+  --out2 ./fastp_ovlp_trimmed_fastqs/${sample}_SXX_L001_R2_001.qtrim.fastq \
+  --length_required 31 --correction --overrepresentation_analysis > fastp_ovlp_trimmed_fastqs/${sample}_fastp_log.txt 2>&1;
+done
+
+
+
+
+#try combo of --detect adapters and then --adapter_fasta
+
+for pair in *_*R1*.fastq; 
+#get leading sample name letter only
+do sample_temp=${pair%%_*};
+sample=$(basename $sample_temp)
+fastp -w 12 --in1 ${sample}*R1*.fastq \
+  --in2 ${sample}*R2*.fastq \
+  --out1 ./fastp_combo_trimmed_fastqs/${sample}_SXX_L001_R1_001.qtrim.fastq \
+  --out2 ./fastp_combo_trimmed_fastqs/${sample}_SXX_L001_R2_001.qtrim.fastq \
+  --detect_adapter_for_pe \
+  --adapter_fasta adapters_sus_leading_seq.fasta \
+  --length_required 31 --correction --overrepresentation_analysis > fastp_combo_trimmed_fastqs/${sample}_fastp_log.txt 2>&1;
+done
+
+
+
+#follow up with bbduk? - in fastp_combo_trimmed_fastqs
+for pair in *_*R1*.fastq; 
+#get leading sample name letter only
+do sample_temp=${pair%%R1*};
+sample=$(basename $sample_temp);
+bbduk.sh in=${sample}R1_001.qtrim.fastq \
+in2=${sample}R2_001.qtrim.fastq \
+ref=adapters \
+out=./bbduk/${sample}R1_001.qtrim.bbduk.fastq \
+out2=./bbduk/${sample}R2_001.qtrim.bbduk.fastq \
+threads=12;
+done
+
+
+#########################################################################################################################################
+
+#remove host contamination
+
+#build host db
+bowtie2-build P_savastanoi_ref.fasta Ps_db
+
+
+#align each set of reads to the host genome:
+
+for pair in fastp_trimmed_fastqs/*_*R1*.fastq; 
+#get leading sample name letter only
+do sample_temp=${pair%%_L0*};
+sample=$(basename $sample_temp);
+bowtie2 -p 8 -x Ps_db -1 fastp_trimmed_fastqs/${sample}_L001_R1_001.qtrim.fastq  -2 fastp_trimmed_fastqs/${sample}_L001_R2_001.qtrim.fastq  -S host_fastp_trimmed_fastqs/${sample}_L001_001.qtrim.htrim.sam > host_fastp_trimmed_fastqs/${sample}_bowtie2_hostalignment_log.txt 2>&1;
+done
+
+cd host_fastp_trimmed_fastqs
+
+for pair in *_L001_001.qtrim.htrim.sam; 
+#get leading sample name letter only
+do sample_temp=${pair%%_L0*};
+sample=$(basename $sample_temp);
+samtools view -bS ${pair} > ${sample}_L001_001.qtrim.htrim.bam;
+samtools sort -o ${sample}_L001_001.qtrim.htrim.sorted.bam -T ./samtools_temp_dir --threads 24 ${pair};
+done
+
+
+#so the '-f 12' flag means to keep only reads where both mates in the pair are unmapped (MAPPED, MATE UNMAPPED), which is more thorough since pe reads come from 1 piece of dna but lets compare to -f 4 -F 2 which is keep unmapped, exclude proper pairs. use samtools view -c to get read counts only rn:
+
+for pair in *_L001_001.qtrim.htrim.sorted.bam; 
+#get leading sample name letter only
+do sample_temp=${pair%%_L0*};
+sample=$(basename $sample_temp);
+echo "${sample}: -f12:";
+samtools view -c -f 12 ${pair};
+echo "${sample}: -f 4 -F 2:";
+samtools view -c -f 4 -F 2 ${pair};
+done
+
+#ok -f 12 seems to be more conservative (keeps less reads) so will move fwd with that.
+#(use cat cat <sample>_SXX_bowtie2_hostalignment_log.txt and then grep -A 1 "<sample>" samtools_filtering_unmapped_comaprison.txt to compare outputs from filtering)
+
+#execute filter step, re-sort the bams, and convert BAMs back into fastqs
+for pair in *_L001_001.qtrim.htrim.sorted.bam; 
+#get leading sample name letter only
+do sample_temp=${pair%%_L0*};
+sample=$(basename $sample_temp);
+samtools view -b -f 12 ${pair} > ${sample}_L001_001.qhtrim.sorted.unmapped.bam;
+samtools sort -o ${sample}_L001_001.qhtrim.unmapped.sorted2.bam -T ./samtools_temp_dir2 --threads 24 ${pair};
+samtools fastq -@ 8 ${sample}_L001_001.qhtrim.unmapped.sorted2.bam -1 ${sample}_L001_001.R1.qhtrim.unmapped.sorted2.fastq -2 ${sample}_L001_001.R2.qhtrim.unmapped.sorted2.fastq;
+done
+
+#move to /group/sldmunozgrp/cm_cysto_all_illumina/final_trimmed_fastqs:
+mv *.qhtrim.unmapped.sorted2.fastq ../../final_trimmed_fastqs
+
+
+#READ NORMALIZING wit bbnorm - "norm3" settings from test analysis:
+#(need new slurm for more cores):
+srun -c 6 -t 10:00:00 --mem=50000 --pty /bin/bash
+
+for pair in final_trimmed_fastqs/*_SXX_L001_001.R1.qhtrim.unmapped.sorted2.fastq;  
+do file=$(basename $pair);  sample_temp=${file%%_*};  
+sample=$(basename $sample_temp);  
+bbnorm.sh threads=12 tgt=325 max=350 in=final_trimmed_fastqs/${sample}_SXX_L001_001.R1.qhtrim.unmapped.sorted2.fastq in2=final_trimmed_fastqs/${sample}_SXX_L001_001.R2.qhtrim.unmapped.sorted2.fastq out=normalized3_trimmed_reads/${sample}_SXX_L001_001.R1.qhtrim.unmapped.sorted2.bbnorm3.fastq out2=normalized3_trimmed_reads/${sample}_SXX_L001_001.R2.qhtrim.unmapped.sorted2.bbnorm3.fastq hist=normalized3_trimmed_reads/${sample}_bbnorm3_histogram_out;  
+done
+
+#re-do megahit
+for pair in normalized3_trimmed_reads/*_SXX_L001_001.R1.qhtrim.unmapped.sorted2.bbnorm3.fastq; 
+do file=$(basename $pair); 
+sample_temp=${file%%_*}; 
+sample=$(basename $sample_temp); 
+megahit -1 normalized3_trimmed_reads/${sample}_SXX_L001_001.R1.qhtrim.unmapped.sorted2.bbnorm3.fastq -2 normalized3_trimmed_reads/${sample}_SXX_L001_001.R2.qhtrim.unmapped.sorted2.bbnorm3.fastq -o megahit/${sample}_norm3_megahit_output -t 12 -m 50000000;
+done
+
+#change file names and add underscores to fasta headers
+#in readnorm conda env, use reformat.sh from bbtools to remove spaces from fasta heaters
+
+for direct in *_norm3_megahit_output; 
+do file=$(basename $direct); 
+sample=${file##*/}
+sample=${file%%_*}; 
+mv ${sample}_norm3_megahit_output/final.contigs.fa ${sample}_norm3_megahit_output/${sample}_norm3_megahit_contigs.fasta;
+reformat.sh in=${sample}_norm3_megahit_output/${sample}_norm3_megahit_contigs.fasta out=${sample}_norm3_megahit_output/${sample}_norm3_megahit_contigs.refmt.fasta addunderscore;
+mv ${sample}_norm3_megahit_output/${sample}_norm3_megahit_contigs.refmt.fasta ${sample}_norm3_megahit_output/${sample}_norm3_megahit_contigs.fasta;
+done
+
+bash filter_megahit_scaffolds.sh -d "_norm3_megahit"
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+ for pair in *_*R1*.fastq;
+do sample_temp=${pair%%_*}; sample=$(basename $sample_temp); fastp -w 12 --in1 ${sample}*R1*.fastq   --in2 ${sample}*R2*.fastq   --out1 ./fastp_combo_trimmed_fastqs/${sample}_SXX_L001_R1_001.qtrim.fastq   --out2 ./fastp_combo_trimmed_fastqs/${sample}_SXX_L001_R2_001.qtrim.fastq   --detect_adapter_for_pe   --adapter_fasta adapters_sus_leading_seq.fasta   --length_required 31 --correction --overrepresentation_analysis > fastp_combo_trimmed_fastqs/${sample}_fastp_log.txt 2>&1; done
+
+
+for pair in *_*R1*.fastq;                                                                do sample_temp=${pair%%_*}; sample=$(basename $sample_temp); bbduk.sh in=${sample}*R1*.fastq in2=${sample}*R2*.fastq ref=adapters out=./bbduk/${sample}_SXX_L001_R1_001.qtrim.fast out2=./bbduk/${sample}_SXX_L001_R2_001.qtrim.fastq threads=12; done
+
+
+
+for pair in *_*R1*.fastq;  do sample_temp=${pair%%_L0*}; sample=$(basename $sample_temp); bowtie2 -p 8 -x Ps_db -1 ${sample}_L001_R1_001.qtrim.bbduk.fastq -2 ${sample}_L001_R2_001.qtrim.bbduk.fastq -S host_bbduk_fastp_trimmed/${sample}_L001_R1_001.htrim.qtrim.bbduk.sam > host_bbduk_fastp_trimmed/${sample}_L001_R1_001.host_alignment_log.txt 2>&1; done
+
+
+for pair in *.sam;  do sample_temp=${pair%%_R1*}; sample=$(basename $sample_temp); mv ${sample}_R1_001.sam ${sample}_R1_001.qtrim.bbduk.htrim.sam; done
+
+
+for pair in *001.qtrim.bbduk.htrim.sam; 
+#get leading sample name letter only
+do sample_temp=${pair%%_R1*};
+sample=$(basename $sample_temp);
+samtools view -bS ${pair} > ${sample}_001.qtrim.bbduk.htrim.bam;
+samtools sort -o ${sample}_L001_001.qtrim.bbduk.htrim.sorted.bam -T ./samtools_temp_dir --threads 24 ${pair};
+done
+
+
+
+for pair in *_L001_001.qtrim.bbduk.htrim.sorted.bam; 
+#get leading sample name letter only
+do sample_temp=${pair%%_L0*};
+sample=$(basename $sample_temp);
+samtools view -b -f 12 ${pair} > ${sample}_L001_001.qhtrim.bbduk.sorted.unmapped.bam;
+samtools sort -o ${sample}_L001_001.qhtrim.bbduk.unmapped.sorted2.bam -T ./samtools_temp_dir2 --threads 24 ${pair};
+samtools fastq -@ 8 ${sample}_L001_001.qhtrim.bbduk.unmapped.sorted2.bam -1 ${sample}_L001_001.R1.qhtrim.bbduk.unmapped.sorted2.fastq -2 ${sample}_L001_001.R2.qhtrim.bbduk.unmapped.sorted2.fastq;
+done
+
+
+mv *.qhtrim.bbduk.unmapped.sorted2.fastq ../../final_bbduk_trimmed_fastqs
+
+##########################################################################################################################################
+#came back to reapir ... fastqs.... 
+#in conda env readnorm
+
+for pair in *_L001_001.R1.qhtrim.bbduk.unmapped.sorted2.fastq; 
+#get leading sample name letter only
+do sample_temp=${pair%%_L0*};
+sample=$(basename $sample_temp);
+repair.sh in=${sample}_L001_001.R1.qhtrim.bbduk.unmapped.sorted2.fastq in2=${sample}_L001_001.R2.qhtrim.bbduk.unmapped.sorted2.fastq out=repaired/${sample}_L001_001.R1.qhtrim.bbduk.unmapped.sorted2.repaired.fastq out2=repaired/${sample}_L001_001.R2.qhtrim.bbduk.unmapped.sorted2.repaired.fastq ow=f ain=t;
+done
+
+##########################################################################################################################################
+cp *.qhtrim.bbduk.unmapped.sorted2.repaired.fastq ../../final_bbduk_repaired_fastqs
+
+for pair in final_bbduk_repaired_fastqs/*_SXX_L001_001.R1.qhtrim.bbduk.unmapped.sorted2.repaired.fastq;  
+do file=$(basename $pair);  sample_temp=${file%%_*};  
+sample=$(basename $sample_temp);  
+bbnorm.sh threads=12 tgt=325 max=350 in=final_bbduk_repaired_fastqs/${sample}_SXX_L001_001.R1.qhtrim.bbduk.unmapped.sorted2.repaired.fastq in2=final_bbduk_repaired_fastqs/${sample}_SXX_L001_001.R2.qhtrim.bbduk.unmapped.sorted2.repaired.fastq out=normalized3_bbduk_repaired_reads/${sample}_SXX_L001_001.R1.qhtrim.bbduk.unmapped.sorted2.repaired.bbnorm3.fastq out2=normalized3_bbduk_repaired_reads/${sample}_SXX_L001_001.R2.qhtrim.bbduk.unmapped.sorted2.repaired.bbnorm3.fastq hist=normalized3_bbduk_repaired_reads/${sample}_bbnorm3_histogram_out;  
+done
+
+
+for pair in normalized3_bbduk_repaired_reads/*_SXX_L001_001.R1.qhtrim.bbduk.unmapped.sorted2.repaired.bbnorm3.fastq; 
+do file=$(basename $pair); 
+sample_temp=${file%%_*}; 
+sample=$(basename $sample_temp); 
+megahit -1 normalized3_bbduk_repaired_reads/${sample}_SXX_L001_001.R1.qhtrim.bbduk.unmapped.sorted2.repaired.bbnorm3.fastq -2 normalized3_bbduk_repaired_reads/${sample}_SXX_L001_001.R2.qhtrim.bbduk.unmapped.sorted2.repaired.bbnorm3.fastq -o megahit_bbduk_repaired/${sample}_norm3_bbduk_megahit_output -t 20 -m 50000000;
+done
+
+
+for direct in *_norm3_bbduk_megahit_output; 
+do file=$(basename $direct); 
+sample=${file##*/}
+sample=${file%%_*}; 
+mv ${sample}_norm3_bbduk_megahit_output ${sample}_megahit_norm3_bbduk_repaired_output;
+mv ${sample}_megahit_norm3_bbduk_repaired_output/final.contigs.fa ${sample}_megahit_norm3_bbduk_repaired_output/${sample}_norm3_bbduk_repaired_megahit_contigs.fasta;
+reformat.sh in=${sample}_megahit_norm3_bbduk_repaired_output/${sample}_norm3_bbduk_repaired_megahit_contigs.fasta out=${sample}_megahit_norm3_bbduk_repaired_output/${sample}_norm3_bbduk_repaired_megahit_contigs.refmt.fasta addunderscore;
+mv ${sample}_megahit_norm3_bbduk_repaired_output/${sample}_norm3_bbduk_repaired_megahit_contigs.refmt.fasta ${sample}_megahit_norm3_bbduk_repaired_output/${sample}_norm3_bbduk_repaired_megahit_contigs.fasta;
+done
+
+for direct in *_megahit_norm3_bbduk_repaired_output; 
+do file=$(basename $direct); 
+sample=${file##*/}
+sample=${file%%_*}; 
+mv ${sample}_megahit_norm3_bbduk_repaired_output ${sample}_norm3_bbduk_repaired_megahit_output;
+done
+
+bash filter_megahit_scaffolds.sh -d "_norm3_bbduk_repaired_megahit_output"
+
+#maually corrected 2 genomes here G1miseq1419 and Qmiseq1382
+
+
+#align reads back to assemblies: 
+
+
+#copy folders to redo sam calculation with trimmed but un-normalized reads:
+#(move old version: 
+mv final_assemblies/ final_assemblies_before_repaired)
+
+         
+for direct in *_norm3_bbduk_repaired_megahit_output; 
+do file=$(basename $direct); 
+sample=${file##*/}
+sample=${file%%_*}; 
+mkdir ../final_assemblies/${sample}_norm3_bbduk_repaired_megahit_output;
+cp ${sample}_norm3_bbduk_repaired_megahit_output/${sample}_norm3_bbduk_repaired_megahit_*_covlenfilt_contigs.fasta ../final_assemblies/${sample}_norm3_bbduk_repaired_megahit_output;
+done
+
+#upload the corrected genome files: 
+cd 
+
+#actually will use bwa mem instea of bowtie, as its more often used in other papers methods:
+
+for direct in *_norm3_bbduk_repaired_megahit_output; 
+do file=$(basename $direct); 
+sample=${file##*/}
+sample=${file%%_*}; 
+bwa index ${sample}_norm3_bbduk_repaired_megahit_output/${sample}_norm3_bbduk_repaired_megahit_S_covlenfilt_contigs.fasta;
+bwa index ${sample}_norm3_bbduk_repaired_megahit_output/${sample}_norm3_bbduk_repaired_megahit_M_covlenfilt_contigs.fasta;
+bwa index ${sample}_norm3_bbduk_repaired_megahit_output/${sample}_norm3_bbduk_repaired_megahit_L_covlenfilt_contigs.fasta;
+done
+
+
+for direct in *_norm3_bbduk_repaired_megahit_output; 
+do file=$(basename $direct); 
+sample=${file##*/}
+sample=${file%%_*}; 
+echo;
+echo "${sample} S:";
+echo;
+bwa mem ${sample}_norm3_bbduk_repaired_megahit_output/${sample}_norm3_bbduk_repaired_megahit_S_covlenfilt_contigs.fasta /group/sldmunozgrp/cm_cysto_all_illumina/final_bbduk_trimmed_fastqs/repaired/${sample}_SXX_L001_001.R1.qhtrim.bbduk.unmapped.sorted2.repaired.fastq  /group/sldmunozgrp/cm_cysto_all_illumina/final_bbduk_trimmed_fastqs/repaired/${sample}_SXX_L001_001.R2.qhtrim.bbduk.unmapped.sorted2.repaired.fastq -t 12 -o ${sample}_norm3_bbduk_repaired_megahit_output/${sample}_norm3_bbduk_repaired_megahit_S_covlenfilt_contigs.bwaMEM.sam;
+echo;
+echo "${sample} M:";
+echo;
+bwa mem ${sample}_norm3_bbduk_repaired_megahit_output/${sample}_norm3_bbduk_repaired_megahit_M_covlenfilt_contigs.fasta /group/sldmunozgrp/cm_cysto_all_illumina/final_bbduk_trimmed_fastqs/repaired/${sample}_SXX_L001_001.R1.qhtrim.bbduk.unmapped.sorted2.repaired.fastq  /group/sldmunozgrp/cm_cysto_all_illumina/final_bbduk_trimmed_fastqs/repaired/${sample}_SXX_L001_001.R2.qhtrim.bbduk.unmapped.sorted2.repaired.fastq -t 12 -o ${sample}_norm3_bbduk_repaired_megahit_output/${sample}_norm3_bbduk_repaired_megahit_M_covlenfilt_contigs.bwaMEM.sam;
+echo;
+echo "${sample} L:";
+echo;
+bwa mem ${sample}_norm3_bbduk_repaired_megahit_output/${sample}_norm3_bbduk_repaired_megahit_L_covlenfilt_contigs.fasta /group/sldmunozgrp/cm_cysto_all_illumina/final_bbduk_trimmed_fastqs/repaired/${sample}_SXX_L001_001.R1.qhtrim.bbduk.unmapped.sorted2.repaired.fastq  /group/sldmunozgrp/cm_cysto_all_illumina/final_bbduk_trimmed_fastqs/repaired/${sample}_SXX_L001_001.R2.qhtrim.bbduk.unmapped.sorted2.repaired.fastq -t 12 -o ${sample}_norm3_bbduk_repaired_megahit_output/${sample}_norm3_bbduk_repaired_megahit_L_covlenfilt_contigs.bwaMEM.sam;
+done
+
+for direct in *_norm3_bbduk_repaired_megahit_output; 
+do file=$(basename $direct); 
+sample=${file##*/}
+sample=${file%%_*};
+samtools view -bS ${sample}_norm3_bbduk_repaired_megahit_output/${sample}_norm3_bbduk_repaired_megahit_S_covlenfilt_contigs.bwaMEM.sam > ${sample}_norm3_bbduk_repaired_megahit_output/${sample}_norm3_bbduk_repaired_megahit_S_covlenfilt_contigs.bwaMEM.bam;
+samtools sort -o ${sample}_norm3_bbduk_repaired_megahit_output/${sample}_norm3_bbduk_repaired_megahit_S_covlenfilt_contigs.bwaMEM.sorted.bam -T ./samtools_temp_dir --threads 24 ${sample}_norm3_bbduk_repaired_megahit_output/${sample}_norm3_bbduk_repaired_megahit_S_covlenfilt_contigs.bwaMEM.bam;
+samtools consensus -f FASTA -d 50 -C 20 -o ${sample}_norm3_bbduk_repaired_megahit_output/${sample}_norm3_bbduk_repaired_megahit_S_covlenfilt_consensus.fasta ${sample}_norm3_bbduk_repaired_megahit_output/${sample}_norm3_bbduk_repaired_megahit_S_covlenfilt_contigs.bwaMEM.sorted.bam;
+samtools view -bS ${sample}_norm3_bbduk_repaired_megahit_output/${sample}_norm3_bbduk_repaired_megahit_M_covlenfilt_contigs.bwaMEM.sam > ${sample}_norm3_bbduk_repaired_megahit_output/${sample}_norm3_bbduk_repaired_megahit_M_covlenfilt_contigs.bwaMEM.bam;
+samtools sort -o ${sample}_norm3_bbduk_repaired_megahit_output/${sample}_norm3_bbduk_repaired_megahit_M_covlenfilt_contigs.bwaMEM.sorted.bam -T ./samtools_temp_dir --threads 24 ${sample}_norm3_bbduk_repaired_megahit_output/${sample}_norm3_bbduk_repaired_megahit_M_covlenfilt_contigs.bwaMEM.bam;
+samtools consensus -f FASTA -d 50 -C 20 -o ${sample}_norm3_bbduk_repaired_megahit_output/${sample}_norm3_bbduk_repaired_megahit_M_covlenfilt_consensus.fasta ${sample}_norm3_bbduk_repaired_megahit_output/${sample}_norm3_bbduk_repaired_megahit_M_covlenfilt_contigs.bwaMEM.sorted.bam;
+samtools view -bS ${sample}_norm3_bbduk_repaired_megahit_output/${sample}_norm3_bbduk_repaired_megahit_L_covlenfilt_contigs.bwaMEM.sam > ${sample}_norm3_bbduk_repaired_megahit_output/${sample}_norm3_bbduk_repaired_megahit_L_covlenfilt_contigs.bwaMEM.bam;
+samtools sort -o ${sample}_norm3_bbduk_repaired_megahit_output/${sample}_norm3_bbduk_repaired_megahit_L_covlenfilt_contigs.bwaMEM.sorted.bam -T ./samtools_temp_dir --threads 24 ${sample}_norm3_bbduk_repaired_megahit_output/${sample}_norm3_bbduk_repaired_megahit_L_covlenfilt_contigs.bwaMEM.bam;
+samtools consensus -f FASTA -d 50 -C 20 -o ${sample}_norm3_bbduk_repaired_megahit_output/${sample}_norm3_bbduk_repaired_megahit_L_covlenfilt_consensus.fasta ${sample}_norm3_bbduk_repaired_megahit_output/${sample}_norm3_bbduk_repaired_megahit_L_covlenfilt_contigs.bwaMEM.sorted.bam;
+done
+
+for direct in *_norm3_bbduk_megahit_output; 
+do file=$(basename $direct); 
+sample=${file##*/}
+sample=${file%%_*};
+samtools 
