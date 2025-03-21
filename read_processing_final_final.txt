@@ -427,6 +427,20 @@ pos=$(cat positive_control_list.txt)
 
 #bwa mem align assemblies to phi6 
 
+#index the reference seqs:
+
+for direct in *_norm3_bbduk_repaired_megahit_output; 
+do file=$(basename $direct); 
+sample=${file##*/}
+sample=${file%%_*}; 
+bwa index phi6_S.fasta;
+bwa index phi6_M.fasta;
+bwa index phi6_L.fasta;
+done
+
+mv positive_controls ../
+
+#in positive control directory (works becuase only output directories present are the posive ctrls ones):
 
 for direct in *_norm3_bbduk_repaired_megahit_output; 
 do file=$(basename $direct); 
@@ -435,16 +449,50 @@ sample=${file%%_*};
 echo;
 echo "${sample} S:";
 echo;
-bwa mem ${sample}_norm3_bbduk_repaired_megahit_output/${sample}_norm3_bbduk_repaired_megahit_S_covlenfilt_contigs.fasta /group/sldmunozgrp/cm_cysto_all_illumina/final_bbduk_trimmed_fastqs/repaired/${sample}_SXX_L001_001.R1.qhtrim.bbduk.unmapped.sorted2.repaired.fastq  /group/sldmunozgrp/cm_cysto_all_illumina/final_bbduk_trimmed_fastqs/repaired/${sample}_SXX_L001_001.R2.qhtrim.bbduk.unmapped.sorted2.repaired.fastq -t 12 -o ${sample}_norm3_bbduk_repaired_megahit_output/${sample}_norm3_bbduk_repaired_megahit_S_covlenfilt_contigs.bwaMEM.sam;
+bwa mem phi6_S.fasta /group/sldmunozgrp/cm_cysto_all_illumina/final_bbduk_trimmed_fastqs/repaired/${sample}_SXX_L001_001.R1.qhtrim.bbduk.unmapped.sorted2.repaired.fastq  /group/sldmunozgrp/cm_cysto_all_illumina/final_bbduk_trimmed_fastqs/repaired/${sample}_SXX_L001_001.R2.qhtrim.bbduk.unmapped.sorted2.repaired.fastq -t 12 -o ${sample}_norm3_bbduk_repaired_megahit_output/${sample}_positive_ctrl_phi6_S.bwaMEM.sam;
 echo;
 echo "${sample} M:";
 echo;
-bwa mem ${sample}_norm3_bbduk_repaired_megahit_output/${sample}_norm3_bbduk_repaired_megahit_M_covlenfilt_contigs.fasta /group/sldmunozgrp/cm_cysto_all_illumina/final_bbduk_trimmed_fastqs/repaired/${sample}_SXX_L001_001.R1.qhtrim.bbduk.unmapped.sorted2.repaired.fastq  /group/sldmunozgrp/cm_cysto_all_illumina/final_bbduk_trimmed_fastqs/repaired/${sample}_SXX_L001_001.R2.qhtrim.bbduk.unmapped.sorted2.repaired.fastq -t 12 -o ${sample}_norm3_bbduk_repaired_megahit_output/${sample}_norm3_bbduk_repaired_megahit_M_covlenfilt_contigs.bwaMEM.sam;
+bwa mem phi6_M.fasta /group/sldmunozgrp/cm_cysto_all_illumina/final_bbduk_trimmed_fastqs/repaired/${sample}_SXX_L001_001.R1.qhtrim.bbduk.unmapped.sorted2.repaired.fastq  /group/sldmunozgrp/cm_cysto_all_illumina/final_bbduk_trimmed_fastqs/repaired/${sample}_SXX_L001_001.R2.qhtrim.bbduk.unmapped.sorted2.repaired.fastq -t 12 -o ${sample}_norm3_bbduk_repaired_megahit_output/${sample}_positive_ctrl_phi6_M.bwaMEM.sam;
 echo;
 echo "${sample} L:";
 echo;
-bwa mem ${sample}_norm3_bbduk_repaired_megahit_output/${sample}_norm3_bbduk_repaired_megahit_L_covlenfilt_contigs.fasta /group/sldmunozgrp/cm_cysto_all_illumina/final_bbduk_trimmed_fastqs/repaired/${sample}_SXX_L001_001.R1.qhtrim.bbduk.unmapped.sorted2.repaired.fastq  /group/sldmunozgrp/cm_cysto_all_illumina/final_bbduk_trimmed_fastqs/repaired/${sample}_SXX_L001_001.R2.qhtrim.bbduk.unmapped.sorted2.repaired.fastq -t 12 -o ${sample}_norm3_bbduk_repaired_megahit_output/${sample}_norm3_bbduk_repaired_megahit_L_covlenfilt_contigs.bwaMEM.sam;
+bwa mem phi6_L.fasta /group/sldmunozgrp/cm_cysto_all_illumina/final_bbduk_trimmed_fastqs/repaired/${sample}_SXX_L001_001.R1.qhtrim.bbduk.unmapped.sorted2.repaired.fastq  /group/sldmunozgrp/cm_cysto_all_illumina/final_bbduk_trimmed_fastqs/repaired/${sample}_SXX_L001_001.R2.qhtrim.bbduk.unmapped.sorted2.repaired.fastq -t 12 -o ${sample}_norm3_bbduk_repaired_megahit_output/${sample}_positive_ctrl_phi6_L.bwaMEM.sam;
 done
 
+for direct in *_norm3_bbduk_repaired_megahit_output; 
+do file=$(basename $direct); 
+sample=${file##*/}
+sample=${file%%_*};
+samtools view -bS ${sample}_norm3_bbduk_repaired_megahit_output/${sample}_positive_ctrl_phi6_S.bwaMEM.sam > ${sample}_norm3_bbduk_repaired_megahit_output/${sample}_positive_ctrl_phi6_S.bwaMEM.bam;
+samtools sort -o ${sample}_norm3_bbduk_repaired_megahit_output/${sample}_positive_ctrl_phi6_S.bwaMEM.sorted.bam -T ./samtools_temp_dir --threads 24 ${sample}_norm3_bbduk_repaired_megahit_output/${sample}_positive_ctrl_phi6_S.bwaMEM.bam;
+samtools consensus -f FASTA -d 50 -C 20 -o ${sample}_norm3_bbduk_repaired_megahit_output/${sample}_positive_ctrl_phi6_S.consensus.fasta ${sample}_norm3_bbduk_repaired_megahit_output/${sample}_positive_ctrl_phi6_S.bwaMEM.sorted.bam;
 
+samtools view -bS ${sample}_norm3_bbduk_repaired_megahit_output/${sample}_positive_ctrl_phi6_M.bwaMEM.sam > ${sample}_norm3_bbduk_repaired_megahit_output/${sample}_positive_ctrl_phi6_M.bwaMEM.bam;
+samtools sort -o ${sample}_norm3_bbduk_repaired_megahit_output/${sample}_positive_ctrl_phi6_M.bwaMEM.sorted.bam -T ./samtools_temp_dir --threads 24 ${sample}_norm3_bbduk_repaired_megahit_output/${sample}_positive_ctrl_phi6_M.bwaMEM.bam;
+samtools consensus -f FASTA -d 50 -C 20 -o ${sample}_norm3_bbduk_repaired_megahit_output/${sample}_positive_ctrl_phi6_M.consensus.fasta ${sample}_norm3_bbduk_repaired_megahit_output/${sample}_positive_ctrl_phi6_M.bwaMEM.sorted.bam;
+
+samtools view -bS ${sample}_norm3_bbduk_repaired_megahit_output/${sample}_positive_ctrl_phi6_L.bwaMEM.sam > ${sample}_norm3_bbduk_repaired_megahit_output/${sample}_positive_ctrl_phi6_L.bwaMEM.bam;
+samtools sort -o ${sample}_norm3_bbduk_repaired_megahit_output/${sample}_positive_ctrl_phi6_L.bwaMEM.sorted.bam -T ./samtools_temp_dir --threads 24 ${sample}_norm3_bbduk_repaired_megahit_output/${sample}_positive_ctrl_phi6_L.bwaMEM.bam;
+samtools consensus -f FASTA -d 50 -C 20 -o ${sample}_norm3_bbduk_repaired_megahit_output/${sample}_positive_ctrl_phi6_L.consensus.fasta ${sample}_norm3_bbduk_repaired_megahit_output/${sample}_positive_ctrl_phi6_L.bwaMEM.sorted.bam;
+
+Lbam="${sample}_norm3_bbduk_repaired_megahit_output/${sample}_positive_ctrl_phi6_L.bwaMEM.sorted.bam";
+Mbam="${sample}_norm3_bbduk_repaired_megahit_output/${sample}_positive_ctrl_phi6_M.bwaMEM.sorted.bam";
+Sbam="${sample}_norm3_bbduk_repaired_megahit_output/${sample}_positive_ctrl_phi6_S.bwaMEM.sorted.bam";
+errorL=$(samtools stats ${Lbam} | grep "error");
+errorL="${errorL##*:}"
+errorL="${errorL%%#*}"
+errorM=$(samtools stats ${Mbam} | grep "error");
+errorM="${errorM##*:}"
+errorM="${errorM%%#*}"
+errorS=$(samtools stats ${Sbam} | grep "error");
+errorS="${errorS##*:}"
+errorS="${errorS%%#*}"
+avgdepthL=$(samtools coverage ${Lbam} | grep 'NC' |awk '{print $7}' | xargs echo -n);
+avgdepthM=$(samtools coverage ${Mbam} | grep 'NC' |awk '{print $7}' | xargs echo -n);
+avgdepthS=$(samtools coverage ${Sbam} | grep 'NC' |awk '{print $7}' | xargs echo -n);
+echo "${sample}, ${errorL}, ${errorM}, ${errorS}, ${avgdepthL}, ${avgdepthM}, ${avgdepthS}" >>  mismatch_depth_posctrls.csv;
+done
+
+echo "sample, L assembly mismatch rate, M assembly mismatch rate, S assembly mismatch rate, L avg depth, M avg depth, S avg depth" > mismatch_depth_posctrls.csv
 
