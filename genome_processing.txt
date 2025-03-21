@@ -1,0 +1,14 @@
+
+
+
+for direct in *_norm3_bbduk_repaired_megahit_S_covlenfilt_consensus.fasta; 
+do file=$(basename $direct); 
+sample=${file##*/}
+sample=${file%%_*};
+strain=$(grep "${sample}" names.tsv | awk '{print $1}');
+rename.sh in=${sample}_norm3_bbduk_repaired_megahit_S_covlenfilt_consensus.fasta out=${sample}_S_consensus.fasta symbol=m prefix=${strain}_S_ prefixonly=t;
+rename.sh in=${sample}_norm3_bbduk_repaired_megahit_M_covlenfilt_consensus.fasta out=${sample}_M_consensus.fasta symbol=m prefix=${strain}_M_ prefixonly=t;
+rename.sh in=${sample}_norm3_bbduk_repaired_megahit_L_covlenfilt_consensus.fasta out=${sample}_L_consensus.fasta symbol=m prefix=${strain}_L_ prefixonly=t;
+done
+
+
