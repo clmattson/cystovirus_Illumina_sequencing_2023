@@ -5,11 +5,39 @@ for direct in *_norm3_bbduk_repaired_megahit_S_covlenfilt_consensus.fasta;
 do file=$(basename $direct); 
 sample=${file##*/}
 sample=${file%%_*};
-strain=$(grep "${sample}" names.tsv | awk '{print $1}');
-rename.sh in=${sample}_norm3_bbduk_repaired_megahit_S_covlenfilt_consensus.fasta out=${sample}_S_consensus.fasta symbol=m prefix=${strain}_S_ prefixonly=t;
-rename.sh in=${sample}_norm3_bbduk_repaired_megahit_M_covlenfilt_consensus.fasta out=${sample}_M_consensus.fasta symbol=m prefix=${strain}_M_ prefixonly=t;
-rename.sh in=${sample}_norm3_bbduk_repaired_megahit_L_covlenfilt_consensus.fasta out=${sample}_L_consensus.fasta symbol=m prefix=${strain}_L_ prefixonly=t;
+strain=$(grep "${sample}" names.tsv | awk '{print $2}');
+date=$(grep "${sample}" names.tsv | awk '{print $3}');
+rename.sh in=${sample}_norm3_bbduk_repaired_megahit_S_covlenfilt_consensus.fasta out=${sample}_S_consensus.fasta symbol=m prefix=${strain}_S_${date} prefixonly=t;
+rename.sh in=${sample}_norm3_bbduk_repaired_megahit_M_covlenfilt_consensus.fasta out=${sample}_M_consensus.fasta symbol=m prefix=${strain}_M_${date} prefixonly=t;
+rename.sh in=${sample}_norm3_bbduk_repaired_megahit_L_covlenfilt_consensus.fasta out=${sample}_L_consensus.fasta symbol=m prefix=${strain}_L_${date} prefixonly=t;
 done
+
+phi_list="6
+7
+8
+10
+11
+12
+13
+14
+2954 
+nn"
+
+for i in ${phi_list}; 
+phi="phi${i}"
+date=$(grep "${phi}" isolate_dates.tsv | awk '{print $3}');
+rename.sh in=${phi}_S.fasta out=${phi}_S_consensus.fasta symbol=m suffix=_${date};
+reformat.sh in=${phi}_S_consensus.fasta underscore=t ow=t;
+rename.sh in=${phi}_M.fasta out=${phi}_M_consensus.fasta symbol=m suffix=_${date};
+reformat.sh in=${phi}_M_consensus.fasta underscore=t ow=t;
+rename.sh in=${phi}_L.fasta out=${phi}_L_consensus.fasta symbol=m suffix=_${date};
+reformat.sh in=${phi}_L_consensus.fasta underscore=t ow=t;
+done
+
+
+
+for i in ${phi_list};  do phi="phi${i}"; date=$(grep "${phi}" isolate_dates.tsv | awk '{print $3}'); echo "${phi}"; echo "${date}"; done
+
 
 
 #got dates for samples from google drive - used date of collection where available, otherwise used isolation date
@@ -19,3 +47,7 @@ done
 #used 06/11/2009 for phi2954 (recieved for pub on dec 16 2009)
 #used 06/23/1998 for pt305/309/106/110 (article received December 23 1998)
 # phiNN used 03/26/2014 (aritcle received 26/09/2014)
+
+
+
+
