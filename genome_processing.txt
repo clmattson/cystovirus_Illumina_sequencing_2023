@@ -12,3 +12,10 @@ rename.sh in=${sample}_norm3_bbduk_repaired_megahit_L_covlenfilt_consensus.fasta
 done
 
 
+#got dates for samples from google drive - used date of collection where available, otherwise used isolation date
+#for publiushed seqs, subtracted 6 months from journal "received" date 
+#used 06/11/1972 for phi6 (recieved for pub on dec 11 1972)
+#used 09/15/1998 for phi12, phi13, phi8 (recieved for pub on march 15 1999)
+#used 06/11/2009 for phi2954 (recieved for pub on dec 16 2009)
+#used 06/23/1998 for pt305/309/106/110 (article received December 23 1998)
+# phiNN used 03/26/2014 (aritcle received 26/09/2014)
