@@ -5,49 +5,97 @@ for direct in *_norm3_bbduk_repaired_megahit_S_covlenfilt_consensus.fasta;
 do file=$(basename $direct); 
 sample=${file##*/}
 sample=${file%%_*};
-strain=$(grep "${sample}" names.tsv | awk '{print $2}');
-date=$(grep "${sample}" names.tsv | awk '{print $3}');
+strain=$(grep "${sample}" isolate_dates.tsv | awk '{print $2}');
+date=$(grep "${sample}" isolate_dates.tsv | awk '{print $3}');
 rename.sh in=${sample}_norm3_bbduk_repaired_megahit_S_covlenfilt_consensus.fasta out=${sample}_S_consensus.fasta symbol=m prefix=${strain}_S_${date} prefixonly=t;
 rename.sh in=${sample}_norm3_bbduk_repaired_megahit_M_covlenfilt_consensus.fasta out=${sample}_M_consensus.fasta symbol=m prefix=${strain}_M_${date} prefixonly=t;
 rename.sh in=${sample}_norm3_bbduk_repaired_megahit_L_covlenfilt_consensus.fasta out=${sample}_L_consensus.fasta symbol=m prefix=${strain}_L_${date} prefixonly=t;
 done
 
-phi_list="6
-7
-8
-10
-11
-12
-13
-14
-2954 
-nn"
+#actually, give them the same name:
+for direct in *_norm3_bbduk_repaired_megahit_S_covlenfilt_consensus.fasta; 
+do file=$(basename $direct); 
+sample=${file##*/}
+sample=${file%%_*};
+mv ${sample}_S_consensus.fasta ${sample}_S_named.fasta;
+mv ${sample}_M_consensus.fasta ${sample}_M_named.fasta;
+mv ${sample}_L_consensus.fasta ${sample}_L_named.fasta;
+done
 
-for i in ${phi_list}; 
-phi="phi${i}"
-date=$(grep "${phi}" isolate_dates.tsv | awk '{print $3}');
-rename.sh in=${phi}_S.fasta out=${phi}_S_consensus.fasta symbol=m suffix=_${date};
-reformat.sh in=${phi}_S_consensus.fasta underscore=t ow=t;
-rename.sh in=${phi}_M.fasta out=${phi}_M_consensus.fasta symbol=m suffix=_${date};
-reformat.sh in=${phi}_M_consensus.fasta underscore=t ow=t;
-rename.sh in=${phi}_L.fasta out=${phi}_L_consensus.fasta symbol=m suffix=_${date};
-reformat.sh in=${phi}_L_consensus.fasta underscore=t ow=t;
+ for direct in phi*_ref.fasta.fasta;  do file=$(basename $direct);  sample=${file##*/}; sample=${file%%_*}; mv ${sample}_M_ref.fasta ${sample}_M_named.fasta;mv ${sample}_L_ref.fasta ${sample}_L_named.fasta; mv ${sample}_S_ref.fasta ${sample}_S_named.fasta done; for direct in phi*_ref.fasta.fasta;  do file=$(basename $direct);  sample=${file##*/}; sample=${file%%_*}; mv ${sample}_M_ref.fasta ${sample}_M_named.fasta;mv ${sample}_L_ref.fasta ${sample}_L_named.fasta; mv ${sample}_S_ref.fasta ${sample}_S_named.fasta; done
+
+
+
+phi_list="phi10                                                                         
+phi11
+phi12
+phi14
+phi2954
+phi7
+phi9
+phinn"
+
+phi_list="phi8
+phi13"
+
+for phi in ${phi_list};  
+do date=$(grep "${phi}" isolate_dates.tsv | awk '{print $3}');
+rename.sh in=${phi}_S.fasta out=${phi}_S_ref1.fasta suffix=_${date};
+reformat.sh in=${phi}_S_ref1.fasta out=${phi}_S_ref.fasta underscore=t o;
+rm ${phi}_S_ref1.fasta;
+rename.sh in=${phi}_M.fasta out=${phi}_M_ref1.fasta suffix=_${date};
+reformat.sh in=${phi}_M_ref1.fasta out=${phi}_M_ref.fasta underscore=t;
+rm ${phi}_M_ref1.fasta;
+rename.sh in=${phi}_L.fasta out=${phi}_L_ref1.fasta  suffix=_${date};
+reformat.sh in=${phi}_L_ref1.fasta out=${phi}_L_ref.fasta underscore=t;
+rm ${phi}_L_ref1.fasta;
+done
+
+#same code but wiith different name output
+for phi in ${phi_list};
+do date=$(grep "${phi}" isolate_dates.tsv | awk '{print $3}');
+rename.sh in=${phi}_S.fasta out=${phi}_S_named1.fasta suffix=_${date};
+reformat.sh in=${phi}_S_named1.fasta out=${phi}_S_named.fasta underscore=t o;
+rm ${phi}_S_named1.fasta;
+rename.sh in=${phi}_M.fasta out=${phi}_M_named1.fasta suffix=_${date};
+reformat.sh in=${phi}_M_named1.fasta out=${phi}_M_named.fasta underscore=t;
+rm ${phi}_M_named1.fasta;
+rename.sh in=${phi}_L.fasta out=${phi}_L_named1.fasta  suffix=_${date};
+reformat.sh in=${phi}_L_named1.fasta out=${phi}_L_named.fasta underscore=t;
+rm ${phi}_L_named1.fasta;
+done
+
+#get commas out of phi ref headers:
+for i in phi*named.fasta; 
+do sed -i '1s/,//' ${i}; 
 done
 
 
-
 for i in ${phi_list};  do phi="phi${i}"; date=$(grep "${phi}" isolate_dates.tsv | awk '{print $3}'); echo "${phi}"; echo "${date}"; done
-
 
 
 #got dates for samples from google drive - used date of collection where available, otherwise used isolation date
 #for publiushed seqs, subtracted 6 months from journal "received" date 
 #used 06/11/1972 for phi6 (recieved for pub on dec 11 1972)
 #used 09/15/1998 for phi12, phi13, phi8 (recieved for pub on march 15 1999)
-#used 06/11/2009 for phi2954 (recieved for pub on dec 16 2009)
+#used 06/16/2009 for phi2954 (recieved for pub on dec 16 2009)
 #used 06/23/1998 for pt305/309/106/110 (article received December 23 1998)
 # phiNN used 03/26/2014 (aritcle received 26/09/2014)
 
 
 
+#okay lets check we got everything with dates:
+
+for direct in *_norm3_bbduk_repaired_megahit_S_covlenfilt_consensus.fasta; 
+do file=$(basename $direct); 
+sample=${file##*/};
+sample=${file%%_*};
+du -sh ${sample}_norm3_bbduk_repaired_megahit_S_covlenfilt_consensus.fasta;
+du -sh ${sample}*named.fasta;
+done
+
+#ugh also letsa get all the same names to sinlge part names with no slashes: 
+sed -i -e 's/_uc_7\/6/-uc-76/g' *named.fasta
+
+sed -i -e 's/_uc_5\/13/-uc-513/g' *named.fasta
 
