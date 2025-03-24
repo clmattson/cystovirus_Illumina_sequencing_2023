@@ -55,8 +55,9 @@ done
 for phi in ${phi_list};
 do date=$(grep "${phi}" isolate_dates.tsv | awk '{print $3}');
 rename.sh in=${phi}_S.fasta out=${phi}_S_named1.fasta suffix=_${date};
-reformat.sh in=${phi}_S_named1.fasta out=${phi}_S_named.fasta underscore=t o;
+reformat.sh in=${phi}_S_named1.fasta out=${phi}_S_named.fasta underscore=t;
 rm ${phi}_S_named1.fasta;
+done
 rename.sh in=${phi}_M.fasta out=${phi}_M_named1.fasta suffix=_${date};
 reformat.sh in=${phi}_M_named1.fasta out=${phi}_M_named.fasta underscore=t;
 rm ${phi}_M_named1.fasta;
@@ -96,6 +97,19 @@ done
 
 #ugh also letsa get all the same names to sinlge part names with no slashes: 
 sed -i -e 's/_uc_7\/6/-uc-76/g' *named.fasta
-
 sed -i -e 's/_uc_5\/13/-uc-513/g' *named.fasta
 
+#oops, and messed up the alex samples: 
+for direct in SRR*_norm3_bbduk_repaired_megahit_S_covlenfilt_consensus.fasta; 
+do file=$(basename $direct); 
+sample=${file##*/}
+sample=${file%%_*};
+strain=$(grep "${sample}" isolate_dates.tsv | awk '{print $2}');
+date=$(grep "${sample}" isolate_dates.tsv | awk '{print $3}');
+rename.sh in=${sample}_norm3_bbduk_repaired_megahit_S_covlenfilt_consensus.fasta out=${sample}_S_named.fasta ow=t symbol=m prefix=${strain}_S_${date} prefixonly=t;
+rename.sh in=${sample}_norm3_bbduk_repaired_megahit_M_covlenfilt_consensus.fasta out=${sample}_M_named.fasta ow=t symbol=m prefix=${strain}_M_${date} prefixonly=t;
+rename.sh in=${sample}_norm3_bbduk_repaired_megahit_L_covlenfilt_consensus.fasta out=${sample}_L_named.fasta ow=t symbol=m prefix=${strain}_L_${date} prefixonly=t;
+done
+
+cat phi6_S_named.fasta > all_S_named.fasta
+cat 
