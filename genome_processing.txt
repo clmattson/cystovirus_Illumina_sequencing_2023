@@ -113,3 +113,60 @@ done
 
 cat phi6_S_named.fasta > all_S_named.fasta
 cat 
+
+
+#runn mafft: 
+
+mafft --adjustdirectionaccurately --thread 6 all_S_named.fasta > all_S_named_mafft.fasta
+mafft --adjustdirectionaccurately --thread 6 all_M_named.fasta > all_M_named_mafft.fasta
+mafft --adjustdirectionaccurately --thread 6 all_L_named.fasta > all_L_named_mafft.fasta
+
+
+#run iqtree:
+ 
+bin/iqtree2.exe -s all_S_named_mafft.fasta -m GTR+G
+bin/iqtree2.exe -s all_M_named_mafft.fasta -m GTR+G
+bin/iqtree2.exe -s all_L_named_mafft.fasta -m GTR+G
+
+
+
+
+more fixing ndates: 
+
+sed -i -e 's/>pt110_L_2004-06-02/>pt110_L_1998-06-23/g' *.fasta
+sed -i -e 's/>pt110_M_2004-06-02/>pt110_M_1998-06-23/g' *.fasta
+sed -i -e 's/>pt110_S_2004-06-02/>pt110_S_1998-06-23/g' *.fasta
+
+sed -i -e 's/_1972_06_11/_1972-06-11/g' *.fasta 
+
+sed -i -e 's/102b_L_-/102b_L_2013-10-02/g' *.fasta
+sed -i -e 's/102b_M_-/102b_M_2013-10-02/g' *.fasta
+sed -i -e 's/102b_S_-/102b_S_2013-10-02/g' *.fasta
+
+
+sed -i -e 's/ca65b-uc-76_L_-/ca65b-uc-76_L_2003-08-20/g' *.fasta
+sed -i -e 's/ca65b-uc-76_M_-/ca65b-uc-76_M_2003-08-20/g' *.fasta
+sed -i -e 's/ca65b-uc-76_S_-/ca65b-uc-76_S_2003-08-20/g' *.fasta
+
+sed -i -e 's/ca68_S_-/ca68_S_2002-09-19/g' *.fasta
+sed -i -e 's/ca68_M_-/ca68_M_2002-09-19/g' *.fasta
+sed -i -e 's/ca68_L_-/ca68_L_2002-09-19/g' *.fasta
+
+sed -i -e 's/ca64b_L_-/ca64b_L_2003-08-19/g' *named*.fasta
+sed -i -e 's/ca64b_M_-/ca64b_M_2003-08-19/g' *named*.fasta
+sed -i -e 's/ca64b_S_-/ca64b_S_2003-08-19/g' *named*.fasta
+
+
+#take out pt106, pt110, pt309:
+
+filterbyname.sh in=all_L_named.fasta out=all_noPT_L_named.fasta names=pt106_L_1998-06-23,pt110_L_1998-06-23,pt106-uc-76_L_1998-06-23,pt110-uc-76_L_1998-06-23,pt106_M_1998-06-23,pt110_S_1998-06-23,pt106-uc-76_M_1998-06-23,pt110-uc-76_M_1998-06-23,pt106_S_1998-06-23,pt110_S_1998-06-23,pt106-uc-76_S_1998-06-23,pt110-uc-76_S_1998-06-23,PT309_L_1998-06-23,PT309_M_1998-06-23,PT309_S_1998-06-23 include=f
+
+filterbyname.sh in=all_M_named.fasta out=all_noPT_M_named.fasta names=pt106_L_1998-06-23,pt110_L_1998-06-23,pt106-uc-76_L_1998-06-23,pt110-uc-76_L_1998-06-23,pt106_M_1998-06-23,pt110_S_1998-06-23,pt106-uc-76_M_1998-06-23,pt110-uc-76_M_1998-06-23,pt106_S_1998-06-23,pt110_S_1998-06-23,pt106-uc-76_S_1998-06-23,pt110-uc-76_S_1998-06-23,PT309_L_1998-06-23,PT309_M_1998-06-23,PT309_S_1998-06-23 include=f
+
+filterbyname.sh in=all_S_named.fasta out=all_noPT_S_named.fasta names=pt106_L_1998-06-23,pt110_L_1998-06-23,pt106-uc-76_L_1998-06-23,pt110-uc-76_L_1998-06-23,pt106_M_1998-06-23,pt110_S_1998-06-23,pt106-uc-76_M_1998-06-23,pt110-uc-76_M_1998-06-23,pt106_S_1998-06-23,pt110_S_1998-06-23,pt106-uc-76_S_1998-06-23,pt110-uc-76_S_1998-06-23,PT309_L_1998-06-23,PT309_M_1998-06-23,PT309_S_1998-06-23 include=f
+
+#runn mafft: 
+
+mafft --adjustdirectionaccurately --thread 6 all_noPT_S_named.fasta > all_noPT_S_named_mafft.fasta
+mafft --adjustdirectionaccurately --thread 6 all_noPT_M_named.fasta > all_noPT_M_named_mafft.fasta
+mafft --adjustdirectionaccurately --thread 6 all_noPT_L_named.fasta > all_noPT_L_named_mafft.fasta
