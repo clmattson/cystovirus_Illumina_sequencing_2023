@@ -159,12 +159,25 @@ sed -i -e 's/ca64b_S_-/ca64b_S_2003-08-19/g' *named*.fasta
 
 #take out pt106, pt110, pt309:
 
-filterbyname.sh in=all_L_named.fasta out=all_noPT_L_named.fasta names=pt106_L_1998-06-23,pt110_L_1998-06-23,pt106-uc-76_L_1998-06-23,pt110-uc-76_L_1998-06-23,pt106_M_1998-06-23,pt110_S_1998-06-23,pt106-uc-76_M_1998-06-23,pt110-uc-76_M_1998-06-23,pt106_S_1998-06-23,pt110_S_1998-06-23,pt106-uc-76_S_1998-06-23,pt110-uc-76_S_1998-06-23,PT309_L_1998-06-23,PT309_M_1998-06-23,PT309_S_1998-06-23 include=f
+filterbyname.sh in=all_L_named.fasta out=all_noPT_L.fasta names=pt106_L_1998-06-23,pt110_L_1998-06-23,pt106-uc-76_L_1998-06-23,pt110-uc-76_L_1998-06-23,pt106_M_1998-06-23,pt110_S_1998-06-23,pt106-uc-76_M_1998-06-23,pt110-uc-76_M_1998-06-23,pt106_S_1998-06-23,pt110_S_1998-06-23,pt106-uc-76_S_1998-06-23,pt110-uc-76_S_1998-06-23,PT309_L_1998-06-23,PT309_M_1998-06-23,PT309_S_1998-06-23 include=f
 
-filterbyname.sh in=all_M_named.fasta out=all_noPT_M_named.fasta names=pt106_L_1998-06-23,pt110_L_1998-06-23,pt106-uc-76_L_1998-06-23,pt110-uc-76_L_1998-06-23,pt106_M_1998-06-23,pt110_S_1998-06-23,pt106-uc-76_M_1998-06-23,pt110-uc-76_M_1998-06-23,pt106_S_1998-06-23,pt110_S_1998-06-23,pt106-uc-76_S_1998-06-23,pt110-uc-76_S_1998-06-23,PT309_L_1998-06-23,PT309_M_1998-06-23,PT309_S_1998-06-23 include=f
+filterbyname.sh in=all_M_named.fasta out=all_noPT_M.fasta names=pt106_L_1998-06-23,pt110_L_1998-06-23,pt106-uc-76_L_1998-06-23,pt110-uc-76_L_1998-06-23,pt106_M_1998-06-23,pt110_S_1998-06-23,pt106-uc-76_M_1998-06-23,pt110-uc-76_M_1998-06-23,pt106_S_1998-06-23,pt110_S_1998-06-23,pt106-uc-76_S_1998-06-23,pt110-uc-76_S_1998-06-23,PT309_L_1998-06-23,PT309_M_1998-06-23,PT309_S_1998-06-23 include=f
 
-filterbyname.sh in=all_S_named.fasta out=all_noPT_S_named.fasta names=pt106_L_1998-06-23,pt110_L_1998-06-23,pt106-uc-76_L_1998-06-23,pt110-uc-76_L_1998-06-23,pt106_M_1998-06-23,pt110_S_1998-06-23,pt106-uc-76_M_1998-06-23,pt110-uc-76_M_1998-06-23,pt106_S_1998-06-23,pt110_S_1998-06-23,pt106-uc-76_S_1998-06-23,pt110-uc-76_S_1998-06-23,PT309_L_1998-06-23,PT309_M_1998-06-23,PT309_S_1998-06-23 include=f
+filterbyname.sh in=all_S_named.fasta out=all_noPT_S.fasta names=pt106_L_1998-06-23,pt110_L_1998-06-23,pt106-uc-76_L_1998-06-23,pt110-uc-76_L_1998-06-23,pt106_M_1998-06-23,pt110_S_1998-06-23,pt106-uc-76_M_1998-06-23,pt110-uc-76_M_1998-06-23,pt106_S_1998-06-23,pt110_S_1998-06-23,pt106-uc-76_S_1998-06-23,pt110-uc-76_S_1998-06-23,PT309_L_1998-06-23,PT309_M_1998-06-23,PT309_S_1998-06-23 include=f
 
+
+
+#made 'less refs' files by just reconcatenating and not including the srr and extra ref seqs. then have to filter out the PT samples
+
+filterbyname.sh in=all_lessrefs_S.fasta out=all_lessrefs-nopt_S.fasta names=pt106_L_1998-06-23,pt110_L_1998-06-23,pt106-uc-76_L_1998-06-23,pt110-uc-76_L_1998-06-23,pt106_M_1998-06-23,pt110_S_1998-06-23,pt106-uc-76_M_1998-06-23,pt110-uc-76_M_1998-06-23,pt106_S_1998-06-23,pt110_S_1998-06-23,pt106-uc-76_S_1998-06-23,pt110-uc-76_S_1998-06-23,PT309_L_1998-06-23,PT309_M_1998-06-23,PT309_S_1998-06-23 include=f
+
+filterbyname.sh in=all_lessrefs_M.fasta out=all_lessrefs-nopt_M.fasta names=pt106_L_1998-06-23,pt110_L_1998-06-23,pt106-uc-76_L_1998-06-23,pt110-uc-76_L_1998-06-23,pt106_M_1998-06-23,pt110_S_1998-06-23,pt106-uc-76_M_1998-06-23,pt110-uc-76_M_1998-06-23,pt106_S_1998-06-23,pt110_S_1998-06-23,pt106-uc-76_S_1998-06-23,pt110-uc-76_S_1998-06-23,PT309_L_1998-06-23,PT309_M_1998-06-23,PT309_S_1998-06-23 include=f
+
+filterbyname.sh in=all_lessrefs_L.fasta out=all_lessrefs-nopt_L.fasta names=pt106_L_1998-06-23,pt110_L_1998-06-23,pt106-uc-76_L_1998-06-23,pt110-uc-76_L_1998-06-23,pt106_M_1998-06-23,pt110_S_1998-06-23,pt106-uc-76_M_1998-06-23,pt110-uc-76_M_1998-06-23,pt106_S_1998-06-23,pt110_S_1998-06-23,pt106-uc-76_S_1998-06-23,pt110-uc-76_S_1998-06-23,PT309_L_1998-06-23,PT309_M_1998-06-23,PT309_S_1998-06-23 include=f
+
+mv all_lessrefs-nopt_L.fasta all_lessrefs_L.fasta
+mv all_lessrefs-nopt_M.fasta all_lessrefs_M.fasta
+mv all_lessrefs-nopt_S.fasta all_lessrefs_S.fasta
 
 
 #take duplicate seqs out:
@@ -192,4 +205,58 @@ mafft --adjustdirectionaccurately --thread 6 all_noPT_L.fasta > all_lessrefs_M_m
 
 
 #umm okay, lets analyze duplicate samples:
+
+while read line; do
+sample1=$(echo "${line}" |  awk '{print $2}'); 
+sample2=$(echo "${line}" |  awk '{print $4}'); 
+strain=$(echo "${line}" |  awk '{print $3}');
+echo "${sample1} ${sample2}";
+cat ${sample1}_L_named.fasta ${sample2}_L_named.fasta > ${strain}_L_dups.fasta;
+mafft --adjustdirectionaccurately --thread 6 ${strain}_L_dups.fasta > ${strain}_L_dups_mafft.fasta;
+cat ${sample1}_M_named.fasta ${sample2}_M_named.fasta > ${strain}_M_dups.fasta;
+mafft --adjustdirectionaccurately --thread 6 ${strain}_M_dups.fasta > ${strain}_M_dups_mafft.fasta;
+cat ${sample1}_S_named.fasta ${sample2}_S_named.fasta > ${strain}_S_dups.fasta;
+mafft --adjustdirectionaccurately --thread 6 ${strain}_S_dups.fasta > ${strain}_S_dups_mafft.fasta;
+done < dup_list.tsv
+
+
+okay new list of dupes to filter:
+phi6_old_S_1972-06-11,phi14_S_1998-09-15,ca57_S_2002-09-19,ca62-uc-76_S_2002-09-19,ca67_S_2002-09-19,ca68c-uc-76_S_2002-09-19,ca69_S_2002-09-19,v1-4_S_2003-06-30,v1-5-uc-76_S_2003-06-30,v3-uc-76_S_2003-06-30,v4_2_S_2003-06-30,21a_S_2003-07-06,ca66c_2_S_2003-08-19,ca65d_1_S_2003-08-20,ca75-uc-76_S_2004-06-02,90a_S_2013-10-02,125c-uc-76_S_2013-10-16,125d-uc-76_S_2013-10-16,phi6_old_M_1972-06-11,phi14_M_1998-09-15,ca57_M_2002-09-19,ca62-uc-76_M_2002-09-19,ca67_M_2002-09-19,ca68c-uc-76_M_2002-09-19,ca69_M_2002-09-19,v1-4_M_2003-06-30,v1-5-uc-76_M_2003-06-30,v3-uc-76_M_2003-06-30,v4_2_M_2003-06-30,21a_M_2003-07-06,ca66c_2_M_2003-08-19,ca65d_1_M_2003-08-20,ca75-uc-76_M_2004-06-02,90a_M_2013-10-02,125c-uc-76_M_2013-10-16,125d-uc-76_M_2013-10-16,phi6_old_L_1972-06-11,phi14_L_1998-09-15,ca57_L_2002-09-19,ca62-uc-76_L_2002-09-19,ca67_L_2002-09-19,ca68c-uc-76_L_2002-09-19,ca69_L_2002-09-19,v1-4_L_2003-06-30,v1-5-uc-76_L_2003-06-30,v3-uc-76_L_2003-06-30,v4_2_L_2003-06-30,21a_L_2003-07-06,ca66c_2_L_2003-08-19,ca65d_1_L_2003-08-20,ca75-uc-76_L_2004-06-02,90a_L_2013-10-02,125c-uc-76_L_2013-10-16,125d-uc-76_L_2013-10-16
+
+
+
+#filter dupes: 
+
+filterbyname.sh in=all_lessrefs_L.fasta out=all_nodups3_lessrefs_L.fasta include=f names=phi6_old_S_1972-06-11,phi14-uc-76_S_1998-09-15,ca57_S_2002-09-19,ca62-uc-76_S_2002-09-19,ca67_S_2002-09-19,ca68c-uc-76_S_2002-09-19,ca69_S_2002-09-19,v1-4_S_2003-06-30,v1-5-uc-76_S_2003-06-30,v3-uc-76_S_2003-06-30,v4_2_S_2003-06-30,21a_S_2003-07-06,ca66c_2_S_2003-08-19,ca65d_1_S_2003-08-20,ca75-uc-76_S_2004-06-02,90a_S_2013-10-02,125c-uc-76_S_2013-10-16,125d-uc-76_S_2013-10-16,phi6_old_M_1972-06-11,phi14-uc-76_M_1998-09-15,ca57_M_2002-09-19,ca62-uc-76_M_2002-09-19,ca67_M_2002-09-19,ca68c-uc-76_M_2002-09-19,ca69_M_2002-09-19,v1-4_M_2003-06-30,v1-5-uc-76_M_2003-06-30,v3-uc-76_M_2003-06-30,v4_2_M_2003-06-30,21a_M_2003-07-06,ca66c_2_M_2003-08-19,ca65d_1_M_2003-08-20,ca75-uc-76_M_2004-06-02,90a_M_2013-10-02,125c-uc-76_M_2013-10-16,125d-uc-76_M_2013-10-16,phi6_old_L_1972-06-11,phi14-uc-76_L_1998-09-15,ca57_L_2002-09-19,ca62-uc-76_L_2002-09-19,ca67_L_2002-09-19,ca68c-uc-76_L_2002-09-19,ca69_L_2002-09-19,v1-4_L_2003-06-30,v1-5-uc-76_L_2003-06-30,v3-uc-76_L_2003-06-30,v4_2_L_2003-06-30,21a_L_2003-07-06,ca66c_2_L_2003-08-19,ca65d_1_L_2003-08-20,ca75-uc-76_L_2004-06-02,90a_L_2013-10-02,125c-uc-76_L_2013-10-16,125d-uc-76_L_2013-10-16,ca75_S_2004-06-02,ca75_L_2004-06-02,ca75_M_2004-06-02
+
+
+filterbyname.sh in=all_lessrefs_M.fasta out=all_nodups3_lessrefs_M.fasta include=f names=phi6_old_S_1972-06-11,phi14-uc-76_S_1998-09-15,ca57_S_2002-09-19,ca62-uc-76_S_2002-09-19,ca67_S_2002-09-19,ca68c-uc-76_S_2002-09-19,ca69_S_2002-09-19,v1-4_S_2003-06-30,v1-5-uc-76_S_2003-06-30,v3-uc-76_S_2003-06-30,v4_2_S_2003-06-30,21a_S_2003-07-06,ca66c_2_S_2003-08-19,ca65d_1_S_2003-08-20,ca75-uc-76_S_2004-06-02,90a_S_2013-10-02,125c-uc-76_S_2013-10-16,125d-uc-76_S_2013-10-16,phi6_old_M_1972-06-11,phi14-uc-76_M_1998-09-15,ca57_M_2002-09-19,ca62-uc-76_M_2002-09-19,ca67_M_2002-09-19,ca68c-uc-76_M_2002-09-19,ca69_M_2002-09-19,v1-4_M_2003-06-30,v1-5-uc-76_M_2003-06-30,v3-uc-76_M_2003-06-30,v4_2_M_2003-06-30,21a_M_2003-07-06,ca66c_2_M_2003-08-19,ca65d_1_M_2003-08-20,ca75-uc-76_M_2004-06-02,90a_M_2013-10-02,125c-uc-76_M_2013-10-16,125d-uc-76_M_2013-10-16,phi6_old_L_1972-06-11,phi14-uc-76_L_1998-09-15,ca57_L_2002-09-19,ca62-uc-76_L_2002-09-19,ca67_L_2002-09-19,ca68c-uc-76_L_2002-09-19,ca69_L_2002-09-19,v1-4_L_2003-06-30,v1-5-uc-76_L_2003-06-30,v3-uc-76_L_2003-06-30,v4_2_L_2003-06-30,21a_L_2003-07-06,ca66c_2_L_2003-08-19,ca65d_1_L_2003-08-20,ca75-uc-76_L_2004-06-02,90a_L_2013-10-02,125c-uc-76_L_2013-10-16,125d-uc-76_L_2013-10-16,ca75_S_2004-06-02,ca75_L_2004-06-02,ca75_M_2004-06-02
+
+
+
+filterbyname.sh in=all_lessrefs_S.fasta out=all_nodups3_lessrefs_S.fasta include=f names=phi6_old_S_1972-06-11,phi14-uc-76_S_1998-09-15,ca57_S_2002-09-19,ca62-uc-76_S_2002-09-19,ca67_S_2002-09-19,ca68c-uc-76_S_2002-09-19,ca69_S_2002-09-19,v1-4_S_2003-06-30,v1-5-uc-76_S_2003-06-30,v3-uc-76_S_2003-06-30,v4_2_S_2003-06-30,21a_S_2003-07-06,ca66c_2_S_2003-08-19,ca65d_1_S_2003-08-20,ca75-uc-76_S_2004-06-02,90a_S_2013-10-02,125c-uc-76_S_2013-10-16,125d-uc-76_S_2013-10-16,phi6_old_M_1972-06-11,phi14-uc-76_M_1998-09-15,ca57_M_2002-09-19,ca62-uc-76_M_2002-09-19,ca67_M_2002-09-19,ca68c-uc-76_M_2002-09-19,ca69_M_2002-09-19,v1-4_M_2003-06-30,v1-5-uc-76_M_2003-06-30,v3-uc-76_M_2003-06-30,v4_2_M_2003-06-30,21a_M_2003-07-06,ca66c_2_M_2003-08-19,ca65d_1_M_2003-08-20,ca75-uc-76_M_2004-06-02,90a_M_2013-10-02,125c-uc-76_M_2013-10-16,125d-uc-76_M_2013-10-16,phi6_old_L_1972-06-11,phi14-uc-76_L_1998-09-15,ca57_L_2002-09-19,ca62-uc-76_L_2002-09-19,ca67_L_2002-09-19,ca68c-uc-76_L_2002-09-19,ca69_L_2002-09-19,v1-4_L_2003-06-30,v1-5-uc-76_L_2003-06-30,v3-uc-76_L_2003-06-30,v4_2_L_2003-06-30,21a_L_2003-07-06,ca66c_2_L_2003-08-19,ca65d_1_L_2003-08-20,ca75-uc-76_L_2004-06-02,90a_L_2013-10-02,125c-uc-76_L_2013-10-16,125d-uc-76_L_2013-10-16,ca75_S_2004-06-02,ca75_L_2004-06-02,ca75_M_2004-06-02
+
+
+
+mafft --adjustdirectionaccurately --thread 6 all_nodups2_lessrefs_S.fasta > all_nodups2_lessrefs_S_mafft.fasta
+mafft --adjustdirectionaccurately --thread 6 all_nodups2_lessrefs_M.fasta > all_nodups2_lessrefs_M_mafft.fasta
+mafft --adjustdirectionaccurately --thread 6 all_nodups2_lessrefs_L.fasta > all_nodups2_lessrefs_L_mafft.fasta
+
+#transfer to local, run iqtree and open in TempEST. 
+#use sed to remove the _R_ from mafft from the treefiles for readability. 
+
+sed 's/_R_//g' *nodups3*.treefile
+
+
+
+#redo and filter out phinn:
+
+filterbyname.sh in=all_nodups3_lessrefs_S.fasta out=all_nodups3_lessrefs_nophiNN_S.fasta include=f names=Pseudomonas_phage_phiNN_segment substring=t
+filterbyname.sh in=all_nodups3_lessrefs_M.fasta out=all_nodups3_lessrefs_nophiNN_M.fasta include=f names=Pseudomonas_phage_phiNN_segment substring=t ow
+filterbyname.sh in=all_nodups3_lessrefs_L.fasta out=all_nodups3_lessrefs_nophiNN_L.fasta include=f names=Pseudomonas_phage_phiNN_segment substring=t
+
+mafft --adjustdirectionaccurately --thread 6 all_nodups3_lessrefs_nophiNN_S.fasta > all_nodups3_lessrefs_nophiNN_S_mafft.fasta
+mafft --adjustdirectionaccurately --thread 6 all_nodups3_lessrefs_nophiNN_M.fasta > all_nodups3_lessrefs_nophiNN_M_mafft.fasta
+mafft --adjustdirectionaccurately --thread 6 all_nodups3_lessrefs_nophiNN_L.fasta > all_nodups3_lessrefs_nophiNN_L_mafft.fasta
+
 
