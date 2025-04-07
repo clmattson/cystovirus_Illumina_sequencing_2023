@@ -1,0 +1,52 @@
+
+
+
+#lets compare assemblies to the parial sequences avail on genbank:
+
+
+#kevin wright samples (CA##), from Silander et al:
+#most of the fasta headers look like this: >DQ273613.1 Pseudomonas phage phi-6 strain CA/KW072 segment L P2 gene, partial cds
+
+sed 's/\/KW0//g' kw_genbank.fasta > ca_genbank.fasta
+
+reformat.sh in=ca_genbank.fasta out=ca_genbank2.fasta addunderscore
+mv ca_genbank2.fasta ca_genbank.fasta
+
+IFS=$'\n'
+
+for line in $(cat ca_sample_list.tsv);
+do kwsamp=$(echo "${line}" |  awk '{print $2}');
+cmsamp=$(echo "${line}" |  awk '{print $1}');
+filterbyname.sh in=ca_genbank.fasta out=${kwsamp}_filt_seqs.fasta include=t substring=t names=strain_${kwsamp}_segment;
+fastafile=$(grep -ril "${cmsamp}_" ../genomes_complete/*miseq*_L_named.fasta);
+echo "kwsamp: ${kwsamp};   cmsamp: ${cmsamp};   fastafile: ${fastafile}";
+if [ -n "${fastafile}" ]; then
+cat ${fastafile} >> ${kwsamp}_seqs.fasta; 
+echo "fasta file added";
+fi;
+echo;
+done
+
+for file in *filt*.fasta;  
+do sample=${file%%_fi*}; 
+echo "${sample}"; 
+cat ${sample}*seqs.fasta >> ${sample}_all.fasta
+mafft --adjustdirectionaccurately --thread 6 ${sample}_all.fasta > ${sample}_all_mafft.fasta;
+done
+
+
+sample1=$(echo "${line}" |  awk '{print $2}'); 
+sample2=$(echo "${line}" |  awk '{print $4}'); 
+strain=$(echo "${line}" |  awk '{print $3}');
+echo "${sample1} ${sample2}";
+cat ${sample1}_L_named.fasta ${sample2}_L_named.fasta > ${strain}_L_dups.fasta;
+mafft --adjustdirectionaccurately --thread 6 ${strain}_L_dups.fasta > ${strain}_L_dups_mafft.fasta;
+cat ${sample1}_M_named.fasta ${sample2}_M_named.fasta > ${strain}_M_dups.fasta;
+mafft --adjustdirectionaccurately --thread 6 ${strain}_M_dups.fasta > ${strain}_M_dups_mafft.fasta;
+cat ${sample1}_S_named.fasta ${sample2}_S_named.fasta > ${strain}_S_dups.fasta;
+mafft --adjustdirectionaccurately --thread 6 ${strain}_S_dups.fasta > ${strain}_S_dups_mafft.fasta;
+done < ca_sample_list.tsv
+
+
+
+awk 'BEGIN{FS="\n";RS=">";ORS=""} (NR==FNR)&&(NR>1){headers[$1];next} ($1 in headers){print ">" $0}'
