@@ -252,8 +252,7 @@ sed 's/_R_//g' *nodups3*.treefile
 #redo and filter out phinn:
 
 filterbyname.sh in=all_nodups3_lessrefs_S.fasta out=all_nodups3_lessrefs_nophiNN_S.fasta include=f names=Pseudomonas_phage_phiNN_segment substring=t
-filterbyname.sh in=all_nodups3_lessrefs_M.fasta out=all_nodups3_lessrefs_nophiNN_M.fasta include=f names=Pseudomonas_phage_phiNN_segment substring=t ow
-filterbyname.sh in=all_nodups3_lessrefs_L.fasta out=all_nodups3_lessrefs_nophiNN_L.fasta include=f names=Pseudomonas_phage_phiNN_segment substring=t
+filterbyname.sh in=all_nodups3_lessrefs_M.fasta out=all_nodups3_lessrefs_nophiNN_M.fasta include=f names=Pseudomonas_phage_phiNN_segment substring=t 
 
 mafft --adjustdirectionaccurately --thread 6 all_nodups3_lessrefs_nophiNN_S.fasta > all_nodups3_lessrefs_nophiNN_S_mafft.fasta
 mafft --adjustdirectionaccurately --thread 6 all_nodups3_lessrefs_nophiNN_M.fasta > all_nodups3_lessrefs_nophiNN_M_mafft.fasta
