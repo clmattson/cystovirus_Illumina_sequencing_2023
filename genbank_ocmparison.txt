@@ -1,4 +1,9 @@
 
+for i in CA*seqs.fasta
+do sample=${i%%_*};
+mv ${sample}_seqs.fasta ${sample}_L_seqs.fasta
+echo "${sample}";
+done
 
 
 #lets compare assemblies to the parial sequences avail on genbank:
@@ -17,17 +22,17 @@ IFS=$'\n'
 for line in $(cat ca_sample_list.tsv);
 do kwsamp=$(echo "${line}" |  awk '{print $2}');
 cmsamp=$(echo "${line}" |  awk '{print $1}');
-filterbyname.sh in=ca_genbank.fasta out=${kwsamp}_filt_seqs.fasta include=t substring=t names=strain_${kwsamp}_segment;
-fastafile=$(grep -ril "${cmsamp}_" ../genomes_complete/*miseq*_L_named.fasta);
+filterbyname.sh in=ca_genbank_M.fasta out=${kwsamp}_M_filt_seqs.fasta include=t substring=t names=strain_${kwsamp}_segment;
+fastafile=$(grep -ril "${cmsamp}_" ../genomes_complete/*miseq*_M_named.fasta);
 echo "kwsamp: ${kwsamp};   cmsamp: ${cmsamp};   fastafile: ${fastafile}";
 if [ -n "${fastafile}" ]; then
-cat ${fastafile} >> ${kwsamp}_seqs.fasta; 
+cat ${fastafile} >> ${kwsamp}_M_seqs.fasta; 
 echo "fasta file added";
 fi;
 echo;
 done
 
-for file in *filt*.fasta;  
+for file in *_M_filt*.fasta;  
 do sample=${file%%_fi*}; 
 echo "${sample}"; 
 cat ${sample}*seqs.fasta >> ${sample}_all.fasta
