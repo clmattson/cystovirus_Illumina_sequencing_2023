@@ -259,3 +259,39 @@ mafft --adjustdirectionaccurately --thread 6 all_nodups3_lessrefs_nophiNN_M.fast
 mafft --adjustdirectionaccurately --thread 6 all_nodups3_lessrefs_nophiNN_L.fasta > all_nodups3_lessrefs_nophiNN_L_mafft.fasta
 
 
+
+
+
+
+
+#get "pruned" trees: 
+#we want all the refs
+#no pt samples
+#no duplicates
+#less env samples. take these out and then put refs back in
+
+filterbyname.sh in=all_nodups3_lessrefs_L.fasta out=all_pruned_L.fasta include=t names=NC_003715.1,1972,phi7,phi10,phi11,phi12,120b,120c,125c,ca64c,85a,90a,kri319,ca71,v4,ca75,ca68,64501,ca64a,ca67,ca66,ca66c,ca65d,ca73,ca52,ca69 substring=t
+cat  phi*_L_named.fasta >> all_pruned_L.fasta
+
+filterbyname.sh in=all_nodups3_lessrefs_M.fasta out=all_pruned_M.fasta include=t names=NC_003715.1,1972,phi7,phi10,phi11,phi12,120b,120c,125c,ca64c,85a,90a,kri319,ca71,v4,ca75,ca68,64501,ca64a,ca67,ca66,ca66c,ca65d,ca73,ca52,ca69 substring=t
+cat  phi*_M_named.fasta >> all_pruned_M.fasta
+
+filterbyname.sh in=all_nodups3_lessrefs_S.fasta out=all_pruned_S.fasta include=t names=NC_003715.1,1972,phi7,phi10,phi11,phi12,120b,120c,125c,ca64c,85a,90a,kri319,ca71,v4,ca75,ca68,64501,ca64a,ca67,ca66,ca66c,ca65d,ca73,ca52,ca69 substring=t
+cat  phi*_S_named.fasta >> all_pruned_S.fasta
+
+mafft --adjustdirectionaccurately --thread 6 all_pruned_L.fasta > all_pruned_L_mafft.fasta
+mafft --adjustdirectionaccurately --thread 6 all_pruned_M.fasta > all_pruned_M_mafft.fasta
+mafft --adjustdirectionaccurately --thread 6 all_pruned_S.fasta > all_pruned_S_mafft.fasta
+
+
+#transfer to local, run iqtree and open in TempEST. 
+bin/iqtree2.exe -s all_pruned_L_mafft.fasta -m GTR+G
+bin/iqtree2.exe -s all_pruned_M_mafft.fasta -m GTR+G
+bin/iqtree2.exe -s all_pruned_S_mafft.fasta -m GTR+G
+
+#use sed to remove the _R_ from mafft from the treefiles for readability. 
+
+sed -i 's/_R_//g' *pruned*.treefile
+
+
+
